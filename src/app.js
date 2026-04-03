@@ -2,6 +2,10 @@ import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 
+import userRoutes from "./routes/user.routes.js"
+import projectRoutes from "./routes/project.routes.js"
+import requestRoutes from "./routes/request.routes.js"
+
 const app = express()
 
 app.use(cors({
@@ -16,6 +20,9 @@ app.use(cookieParser())         // Parse cookies from incoming requests
 
 // routes will be added here in the future
 
+app.use("/api/v1/users", userRoutes)
+app.use("/api/v1/projects", projectRoutes)
+app.use("/api/v1/requests", requestRoutes)
 
 
 app.use((err, req, res, next) => {
