@@ -1,7 +1,7 @@
-const asyncHandler = (controllerFun) => {
+const AsyncHandler = (controllerFun) => {
     return (req, res, next) => {
         Promise.resolve(controllerFun(req, res, next)).catch(next);    
     };
 };
 
-export { asyncHandler }
+export { AsyncHandler }
