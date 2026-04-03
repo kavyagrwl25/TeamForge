@@ -14,6 +14,9 @@ app.use(express.urlencoded({extended: true, limit: "16kb"})) // Parse URL-encode
 app.use(express.static("public"))           // Serve static files from the "public" directory
 app.use(cookieParser())         // Parse cookies from incoming requests
 
+
+
+
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
 
