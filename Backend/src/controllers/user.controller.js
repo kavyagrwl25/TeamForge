@@ -1,8 +1,8 @@
-import { AsyncHandler } from "../utils/AsyncHandler"             // for named export, import with braces
-import { ApiError } from "../utils/ApiError"
-import { ApiResponse } from "../utils/ApiResponse"
-import { User } from "../models/user.model"                
-import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators"
+import { AsyncHandler } from "../utils/AsyncHandler.js"             // for named export, import with braces
+import { ApiError } from "../utils/ApiError.js"
+import { ApiResponse } from "../utils/ApiResponse.js"
+import { User } from "../models/user.model.js"                
+import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators.js"
 
 const register = AsyncHandler( async (req, res) => {
     // 1. POST /users
@@ -33,11 +33,12 @@ const register = AsyncHandler( async (req, res) => {
             throw new ApiError(409, "User name already in use, Please choose a different user name")
         }
     }
-    const userCreated = await User.create({ fullName, userName, email, password }).select("-password -refreshToken")
+    const userCreated = await User.create({ fullName, userName, email, password })
+    const userData = await User.findById(userCreated._id).select("-password -refreshToken") // exclude sensitive fields
 
     return res
     .status(201)
-    .json(new ApiResponse(201, userCreated, "User registered successfully"))
+    .json(new ApiResponse(201, userData, "User registered successfully"))
 })
 
 
