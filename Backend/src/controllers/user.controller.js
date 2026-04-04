@@ -39,3 +39,13 @@ const register = AsyncHandler( async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, userCreated, "User registered successfully"))
 })
+
+
+
+
+
+
+
+
+
+export { register }
