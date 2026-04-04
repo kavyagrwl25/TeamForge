@@ -1,4 +1,6 @@
 import { AsyncHandler } from "../utils/AsyncHandler"
+import User from "../models/user.model.js"
+import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators"
 
 const register = AsyncHandler( (req, res) => {
     // 1. POST /users
@@ -9,5 +11,6 @@ const register = AsyncHandler( (req, res) => {
     // 6. return this object in data field in response
 
     const { fullName, userName, email, password } = req.body 
+    
     // validate all essential entities
 })
