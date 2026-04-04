@@ -4,6 +4,28 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"                
 import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators.js"
 
+const cookieOptions = {
+    httpOnly: true,
+    secure: false, // set to true in production with HTTPS
+    sameSite: "strict"
+}
+
+const generateTokens = ( async(userId) => {
+    try {
+        const user = await User.findById( userId )
+        if(!user){
+            throw new ApiError(404, "User not found")
+        }
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+        return { accessToken, refreshToken }
+    } catch (error) {
+        throw new ApiError(500, "Failed to generate tokens")
+    }
+})
+
 const register = AsyncHandler( async (req, res) => {
     // 1. POST /users
     // 2. get details from user
@@ -12,16 +34,16 @@ const register = AsyncHandler( async (req, res) => {
     // 5. store this in an obj userCreated without selecting userPassword/RefreshToken
     // 6. return this object in data field in response
     const { fullName, userName, email, password } = req.body 
-    if(!fullName || !isValidFullName(fullName)){
+    if(!isValidFullName(fullName)){
         throw new ApiError(400, "Full name is required, Please enter valid full name")
     }
-    if(!userName || !isValidUserName(userName)){
+    if(!isValidUserName(userName)){
         throw new ApiError(400, "User name is required, Please enter valid user name")
     }
-    if(!email || !isValidEmail(email)){
+    if(!isValidEmail(email)){
         throw new ApiError(400, "Email is required, Please enter valid email")
     }
-    if(!password || !isValidPassword(password)){
+    if(!isValidPassword(password)){
         throw new ApiError(400, "Password is required, Please enter valid password")
     }
     const existingUser = await User.findOne({ $or: [{ email }, { userName }] })
@@ -42,6 +64,37 @@ const register = AsyncHandler( async (req, res) => {
 })
 
 
+const login = AsyncHandler(async (req, res) => {
+    const { email, password } = req.body
+    if (!isValidEmail(email)) {
+        throw new ApiError(400, "Please use a valid email")
+    }
+    if (!isValidPassword(password)) {
+        throw new ApiError(400, "Please enter a valid password")
+    }
+    const user = await User.findOne({ email })
+    if (!user) {
+        throw new ApiError(401, "Invalid credentials")
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
+    if (!isPasswordCorrect) {
+        throw new ApiError(401, "Invalid credentials")
+    }
+    const { accessToken, refreshToken } = await generateTokens(user._id)
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, cookieOptions)
+        .json(
+            new ApiResponse(
+                200,
+                { user: loggedInUser },
+                "Login successful"
+            )
+        )
+})
 
 
 
@@ -49,4 +102,18 @@ const register = AsyncHandler( async (req, res) => {
 
 
 
-export { register }
+export { register, login }
+
+
+
+
+
+// register
+// login
+// logout
+// change password
+// refresh token
+// update userProfile
+// get user
+// profile picture update
+// delete user
