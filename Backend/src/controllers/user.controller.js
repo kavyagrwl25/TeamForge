@@ -10,7 +10,7 @@ const cookieOptions = {
     sameSite: "strict"
 }
 
-const generateTokens = ( async(userId) => {
+const generateTokens =  async(userId) => {
     try {
         const user = await User.findById( userId )
         if(!user){
@@ -24,7 +24,9 @@ const generateTokens = ( async(userId) => {
     } catch (error) {
         throw new ApiError(500, "Failed to generate tokens")
     }
-})
+}
+
+// controllers
 
 const register = AsyncHandler( async (req, res) => {
     const { fullName, userName, email, password } = req.body 
@@ -79,8 +81,8 @@ const login = AsyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, cookieOptions)
+        .cookie("AccessToken", accessToken, cookieOptions)
+        .cookie("RefreshToken", refreshToken, cookieOptions)
         .json(
             new ApiResponse(
                 200,
@@ -91,14 +93,34 @@ const login = AsyncHandler(async (req, res) => {
 })
 
 const logout = AsyncHandler( async(req, res) => {
-    // 1. get userName from req.
+    // 1. get the token from req.user already updated it in auth middleware
+    // 2. update refresh token deletion for the user in db from id
+    // 3. clear cookies
+    // 4. return the response
+    const userId = req.user._id
+    if(!userId){
+        throw new ApiError(404, "User not found")
+    }
+    await User.findByIdAndUpdate( userId, {
+        $unset: {
+            refreshToken: 1
+        }
+    }, {
+        new: true
+    })
+
+    return res
+    .status(200)
+    .clearCookie("AccessToken", cookieOptions)   
+    .clearCookie("RefreshToken", cookieOptions)   
+    .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
 
 
 
 
 
-export { register, login }
+export { register, login, logout }
 
 
 

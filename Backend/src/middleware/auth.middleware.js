@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken"
 const verifyToken = AsyncHandler( async(req, res, next) => {            // used asyncHandler to catch db errors
     // 1. get the accessToken from cookie
     // 2. verify it with the jwt.verify giving access secret key
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")  
+        const token = req.cookies?.AccessToken || req.header("Authorization")?.replace("Bearer ", "")  
         if (!token) {
             throw new ApiError(401, "Unauthorized request");
         }
@@ -18,8 +18,10 @@ const verifyToken = AsyncHandler( async(req, res, next) => {            // used 
         }             
         const user = await User.findById( decodedPayload._id ).select("-password -refreshToken")
         if(!user){
-            throw new ApiError(401, "Token is not valid")
+            throw new ApiError(401, "User not found for this token")
         }
         req.user = user
         next();
 })
+
+export { verifyToken }
