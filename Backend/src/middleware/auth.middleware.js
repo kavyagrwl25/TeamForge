@@ -1,6 +1,6 @@
 import { ApiError } from "../utils/ApiError.js"
 import { AsyncHandler } from "../utils/AsyncHandler.js"
-import User from "../models/user.model.js"
+import { User } from "../models/user.model.js"
 import jwt from "jsonwebtoken"
 
 const verifyToken = AsyncHandler( async(req, res, next) => {            // used asyncHandler to catch db errors
