@@ -90,7 +90,9 @@ const login = AsyncHandler(async (req, res) => {
         )
 })
 
-
+const logout = AsyncHandler( async(req, res) => {
+    // 1. get userName from req.
+})
 
 
 
@@ -102,8 +104,8 @@ export { register, login }
 
 
 
-// register
-// login
+// register     :done
+// login        :done
 // logout
 // change password
 // refresh token
