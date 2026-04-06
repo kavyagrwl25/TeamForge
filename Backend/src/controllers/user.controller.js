@@ -93,10 +93,6 @@ const login = AsyncHandler(async (req, res) => {
 })
 
 const logout = AsyncHandler( async(req, res) => {
-    // 1. get the token from req.user already updated it in auth middleware
-    // 2. update refresh token deletion for the user in db from id
-    // 3. clear cookies
-    // 4. return the response
     const userId = req.user._id
     if(!userId){
         throw new ApiError(404, "User not found")
@@ -114,9 +110,7 @@ const logout = AsyncHandler( async(req, res) => {
     .clearCookie("AccessToken", cookieOptions)   
     .clearCookie("RefreshToken", cookieOptions)   
     .json(new ApiResponse(200, {}, "User logged out successfully"))
-})
-
-
+}) 
 
 
 
