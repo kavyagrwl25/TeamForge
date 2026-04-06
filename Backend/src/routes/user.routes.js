@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, logout } from "../controllers/user.controller.js";
+import { register, login, logout, refreshTokens } from "../controllers/user.controller.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
 const router = Router();
 
@@ -7,4 +7,5 @@ router.post("/register", register) //Authentication endpoints represent actions 
 router.post("/login", login)
 
 router.post("/logout", verifyToken, logout)
+router.post("/refresh-tokens", refreshTokens) // Refresh tokens are used to obtain new access tokens without requiring the user to log in again. This endpoint allows clients to request new access tokens using a valid refresh token, enhancing security and user experience.
 export default router

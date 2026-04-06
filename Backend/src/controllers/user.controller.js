@@ -3,12 +3,21 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"                
 import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators.js"
+import jwt from "jsonwebtoken"
 
-const cookieOptions = {
+const accessTokenOptions = {
     httpOnly: true,
-    secure: false, // set to true in production with HTTPS
-    sameSite: "strict"
-}
+    secure: false,
+    sameSite: "strict",
+    maxAge: 15 * 60 * 1000 // 15 min
+};
+
+const refreshTokenOptions = {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+};
 
 const generateTokens =  async(userId) => {
     try {
@@ -81,8 +90,8 @@ const login = AsyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .cookie("AccessToken", accessToken, cookieOptions)
-        .cookie("RefreshToken", refreshToken, cookieOptions)
+        .cookie("accessToken", accessToken, accessTokenOptions)
+        .cookie("refreshToken", refreshToken, refreshTokenOptions)
         .json(
             new ApiResponse(
                 200,
@@ -107,14 +116,36 @@ const logout = AsyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .clearCookie("AccessToken", cookieOptions)   
-    .clearCookie("RefreshToken", cookieOptions)   
+    .clearCookie("accessToken", accessTokenOptions)   
+    .clearCookie("refreshToken", refreshTokenOptions)   
     .json(new ApiResponse(200, {}, "User logged out successfully"))
 }) 
 
+const refreshTokens = AsyncHandler( async(req, res) => {
+    const refreshToken = req.cookies?.refreshToken || req.header("Authorization")?.replace("Bearer ", "")
+    if(!refreshToken){
+        throw new ApiError(401, "Refresh token not found, Please login again")
+    }
+    let decodedPayload
+    try {
+        decodedPayload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+    } catch (error) {
+        throw new ApiError(401, "Invalid or expired refresh token, Please login again")
+    }
+    const user = await User.findById(decodedPayload._id)
+    if(!user || user.refreshToken !== refreshToken){
+        throw new ApiError(401, "Invalid refresh token, Please login again")
+    }
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await generateTokens(user._id)
+    return res
+    .status(200)
+    .cookie("accessToken", newAccessToken, accessTokenOptions)
+    .cookie("refreshToken", newRefreshToken, refreshTokenOptions)
+    .json(new ApiResponse(200, {}, "Tokens refreshed successfully"))
+})
 
 
-export { register, login, logout }
+export { register, login, logout, refreshTokens }
 
 
 
