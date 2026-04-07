@@ -144,8 +144,39 @@ const refreshTokens = AsyncHandler( async(req, res) => {
     .json(new ApiResponse(200, {}, "Tokens refreshed successfully"))
 })
 
+const changePassword = AsyncHandler( async(req, res) => {
+    // 1. POST/changePassword (protected route)
+    // 2. Get userId to search for the req.user
+    // 3. get current password & new password from the user
+    // 4. match the password from db
+    // 5. if matched, update the db password with new password
+    const userId = req.user?._id
+    const { currentPassword, newPassword } = req.body
+    if(!isValidPassword(currentPassword) || !isValidPassword(newPassword)){
+        throw new ApiError(400, "Invalid password")
+    }
+    if(currentPassword === newPassword){
+        throw new ApiError(400, "New password cannot be same as current password")
+    }
+    const user = await User.findById(userId)
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(currentPassword)
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Current Password is not correct")
+    }
+    user.password = newPassword
+    await user.save()
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await generateTokens(userId)
+    return res
+    .status(200)
+    .cookie("accessToken", newAccessToken, accessTokenOptions)
+    .cookie("refreshToken", newRefreshToken, refreshTokenOptions)
+    .json(new ApiResponse(200, {}, "Changed password successfully"))
+})
 
-export { register, login, logout, refreshTokens }
+export { register, login, logout, refreshTokens, changePassword }
 
 
 
@@ -153,9 +184,9 @@ export { register, login, logout, refreshTokens }
 
 // register     :done
 // login        :done
-// logout
-// change password
-// refresh token
+// logout       :done
+// change password      
+// refresh token        :done
 // update userProfile
 // get user
 // profile picture update
