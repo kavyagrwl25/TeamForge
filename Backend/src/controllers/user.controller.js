@@ -145,11 +145,6 @@ const refreshTokens = AsyncHandler( async(req, res) => {
 })
 
 const changePassword = AsyncHandler( async(req, res) => {
-    // 1. POST/changePassword (protected route)
-    // 2. Get userId to search for the req.user
-    // 3. get current password & new password from the user
-    // 4. match the password from db
-    // 5. if matched, update the db password with new password
     const userId = req.user?._id
     const { currentPassword, newPassword } = req.body
     if(!isValidPassword(currentPassword) || !isValidPassword(newPassword)){
