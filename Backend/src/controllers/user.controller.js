@@ -174,10 +174,6 @@ const changePassword = AsyncHandler( async(req, res) => {
 })
 
 const updateProfile = AsyncHandler (async (req, res) => {
-    // 1. PUT /api/users/profile
-    // 2. get all details from user, it has to update
-    // 3. validate all the fields
-    // 4. save all the fields in db
     const { fullName, userName, bio, skills, socialLinks } = req.body
     if (
         fullName === undefined &&
