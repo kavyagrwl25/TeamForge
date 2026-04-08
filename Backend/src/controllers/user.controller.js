@@ -184,6 +184,13 @@ const updateProfile = AsyncHandler (async (req, res) => {
     ) {
         throw new ApiError(400, "Nothing to update");
     }
+    if (userName !== undefined) {
+        const existingUser = await User.findOne({ userName });
+
+        if (existingUser && existingUser._id.toString() !== req.user._id.toString()) {
+            throw new ApiError(400, "Username already taken");
+        }
+    }
     if (fullName !== undefined && !isValidFullName(fullName)) {
         throw new ApiError(400, "Invalid full name");
     }
@@ -226,7 +233,7 @@ const updateProfile = AsyncHandler (async (req, res) => {
     .json(new ApiResponse(200, user, "Profile updated successfully"))
 })
 
-export { register, login, logout, refreshTokens, changePassword }
+export { register, login, logout, refreshTokens, changePassword, updateProfile }
 
 
 
