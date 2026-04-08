@@ -33,3 +33,26 @@ export const isValidPassword = (password) => {
     if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(trimmed)) return false;
     return true;
 };
+
+export const isValidBio = (bio) => {
+  if (bio === undefined || bio === null) return true;
+  if (typeof bio !== "string") return false;
+  // Check if it's only spaces
+  if (bio.trim().length === 0) return false;
+  // Count length INCLUDING spaces
+  if (bio.length > 200) return false;
+  return true;
+};
+
+export const isValidSkills = (skills) => {
+  if (skills === undefined || skills === null) return true; // optional
+  if (!Array.isArray(skills)) return false;
+  if (skills.length > 15) return false; // max number of skills
+  for (const skill of skills) {
+    if (typeof skill !== "string") return false;
+    const trimmedSkill = skill.trim();
+    if (trimmedSkill.length === 0) return false; // empty skill
+    if (trimmedSkill.length > 30) return false;  // too long
+  }
+  return true;
+};

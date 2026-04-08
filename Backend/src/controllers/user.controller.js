@@ -2,7 +2,7 @@ import { AsyncHandler } from "../utils/AsyncHandler.js"             // for named
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"                
-import { isValidFullName, isValidEmail, isValidPassword, isValidUserName } from "../utils/validators.js"
+import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio } from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
 const accessTokenOptions = {
@@ -171,6 +171,38 @@ const changePassword = AsyncHandler( async(req, res) => {
     .json(new ApiResponse(200, {}, "Changed password successfully"))
 })
 
+const updateProfile = AsyncHandler (async (req, res) => {
+    // 1. PUT /api/users/profile
+    // 2. get all details from user, it has to update
+    // 3. validate all the fields
+    // 4. save all the fields in db
+    const { fullName, userName, email, bio, skills, githubLink, linkedinLink, role } = req.body
+    if(!fullName && !userName && !bio && !email && !skills && !githubLink && !linkedinLink && !role){
+        throw new ApiError(400, "Nothing to update")
+    }
+    if(!isValidFullName(fullName)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidUserName(userName)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidBio(bio)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidEmail(email)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidSkills(skills)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidFullName(githubLink)){
+        throw new ApiError(400, "Invalid full name");
+    }
+    if(!isValidFullName(linkedinLink)){
+        throw new ApiError(400, "Invalid full name");
+    }
+})
+
 export { register, login, logout, refreshTokens, changePassword }
 
 
@@ -180,9 +212,9 @@ export { register, login, logout, refreshTokens, changePassword }
 // register     :done
 // login        :done
 // logout       :done
-// change password      
+// change password      :done 
 // refresh token        :done
-// update userProfile
+// update userProfile   :done
 // get user
 // profile picture update
 // delete user
