@@ -56,3 +56,26 @@ export const isValidSkills = (skills) => {
   }
   return true;
 };
+
+export const isValidSocialLinks = (socialLinks) => {
+  if (socialLinks === undefined || socialLinks === null) return true;
+  if (typeof socialLinks !== "object" || Array.isArray(socialLinks)) return false;
+  const { github, linkedin } = socialLinks;
+  // GitHub validation
+  if (github !== undefined && github !== null) {
+    if (typeof github !== "string") return false;
+    const trimmedGithub = github.trim();
+    if (trimmedGithub.length === 0) return false;
+    const githubRegex = /^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/;
+    if (!githubRegex.test(trimmedGithub)) return false;
+  }
+  // LinkedIn validation
+  if (linkedin !== undefined && linkedin !== null) {
+    if (typeof linkedin !== "string") return false;
+    const trimmedLinkedin = linkedin.trim();
+    if (trimmedLinkedin.length === 0) return false;
+    const linkedinRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+    if (!linkedinRegex.test(trimmedLinkedin)) return false;
+  }
+  return true;
+};

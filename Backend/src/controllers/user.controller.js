@@ -2,7 +2,7 @@ import { AsyncHandler } from "../utils/AsyncHandler.js"             // for named
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"                
-import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio } from "../utils/validators.js"
+import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio, isValidSkills, isValidSocialLinks } from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
 const accessTokenOptions = {
@@ -137,6 +137,7 @@ const refreshTokens = AsyncHandler( async(req, res) => {
         throw new ApiError(401, "Invalid refresh token, Please login again")
     }
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await generateTokens(user._id)
+
     return res
     .status(200)
     .cookie("accessToken", newAccessToken, accessTokenOptions)
@@ -164,6 +165,7 @@ const changePassword = AsyncHandler( async(req, res) => {
     user.password = newPassword
     await user.save()
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await generateTokens(userId)
+
     return res
     .status(200)
     .cookie("accessToken", newAccessToken, accessTokenOptions)
@@ -176,31 +178,56 @@ const updateProfile = AsyncHandler (async (req, res) => {
     // 2. get all details from user, it has to update
     // 3. validate all the fields
     // 4. save all the fields in db
-    const { fullName, userName, email, bio, skills, githubLink, linkedinLink, role } = req.body
-    if(!fullName && !userName && !bio && !email && !skills && !githubLink && !linkedinLink && !role){
-        throw new ApiError(400, "Nothing to update")
+    const { fullName, userName, bio, skills, socialLinks } = req.body
+    if (
+        fullName === undefined &&
+        userName === undefined &&
+        bio === undefined &&
+        skills === undefined &&
+        socialLinks === undefined
+    ) {
+        throw new ApiError(400, "Nothing to update");
     }
-    if(!isValidFullName(fullName)){
+    if (fullName !== undefined && !isValidFullName(fullName)) {
         throw new ApiError(400, "Invalid full name");
     }
-    if(!isValidUserName(userName)){
-        throw new ApiError(400, "Invalid full name");
+
+    if (userName !== undefined && !isValidUserName(userName)) {
+        throw new ApiError(400, "Invalid username");
     }
-    if(!isValidBio(bio)){
-        throw new ApiError(400, "Invalid full name");
+
+    if (bio !== undefined && !isValidBio(bio)) {
+        throw new ApiError(400, "Invalid bio");
     }
-    if(!isValidEmail(email)){
-        throw new ApiError(400, "Invalid full name");
+
+    if (skills !== undefined && !isValidSkills(skills)) {
+        throw new ApiError(400, "Invalid skills");
     }
-    if(!isValidSkills(skills)){
-        throw new ApiError(400, "Invalid full name");
+
+    if (socialLinks !== undefined && !isValidSocialLinks(socialLinks)) {
+        throw new ApiError(400, "Invalid social links");
     }
-    if(!isValidFullName(githubLink)){
-        throw new ApiError(400, "Invalid full name");
+    const updateFields = {};
+        if (fullName !== undefined) updateFields.fullName = fullName;
+        if (userName !== undefined) updateFields.userName = userName;
+        if (bio !== undefined) updateFields.bio = bio;
+        if (skills !== undefined) updateFields.skills = skills;
+        if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
+
+    const user = await User.findByIdAndUpdate(req.user._id, {
+        $set: updateFields  
+    }, {
+        returnDocument: "after",
+        runValidators: true
+    }).select("-password -refreshToken")
+
+    if(!user){
+        throw new ApiError(404, "User not found")
     }
-    if(!isValidFullName(linkedinLink)){
-        throw new ApiError(400, "Invalid full name");
-    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Profile updated successfully"))
 })
 
 export { register, login, logout, refreshTokens, changePassword }

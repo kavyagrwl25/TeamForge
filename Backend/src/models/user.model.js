@@ -48,22 +48,15 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    githubLink: {
-      type: String,
-      trim: true,
-      default: "",
+    socialLinks: {
+      github: { type: String, trim: true, default: null },
+      linkedin: { type: String, trim: true, default: null }
     },
 
-    linkedinLink: {
+    authRole: {
       type: String,
-      trim: true,
-      default: "",
-    },
-
-    role: {
-      type: String,
-      trim: true,
-      default: "",
+      enum: ["user", "admin"],
+      default: "user",
     },
 
     refreshToken: {
