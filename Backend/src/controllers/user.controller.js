@@ -233,7 +233,39 @@ const updateProfile = AsyncHandler (async (req, res) => {
     .json(new ApiResponse(200, user, "Profile updated successfully"))
 })
 
-export { register, login, logout, refreshTokens, changePassword, updateProfile }
+const getCurrentUser = AsyncHandler(async(req, res) => {
+    const user = await User.findById(req.user?._id).select("-password -refreshToken").lean()
+    if(!user){
+        throw new ApiError(404, "User not exist")
+    }
+
+    return res.status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"))
+})
+
+const deleteUser = AsyncHandler(async(req, res) => {
+    const { password } = req.body
+    if(!isValidPassword(password)){
+        throw new ApiError(400, "Invalid password")
+    }
+    const user = await User.findById(req.user?._id).select("+password")
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Invalid password")
+    }
+    await User.findByIdAndDelete(user._id)
+
+    return res
+    .status(200)
+    .clearCookie("AccessToken", accessTokenOptions)
+    .clearCookie("RefreshToken", refreshTokenOptions)
+    .json(new ApiResponse(200, {}, "User deleted successfully"))
+})
+
+export { register, login, logout, refreshTokens, changePassword, updateProfile, getCurrentUser, deleteUser }
 
 
 
@@ -245,6 +277,6 @@ export { register, login, logout, refreshTokens, changePassword, updateProfile }
 // change password      :done 
 // refresh token        :done
 // update userProfile   :done
-// get user
+// get user             :done
+// delete user          :done
 // profile picture update
-// delete user
