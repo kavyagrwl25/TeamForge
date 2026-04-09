@@ -260,8 +260,8 @@ const deleteUser = AsyncHandler(async(req, res) => {
 
     return res
     .status(200)
-    .clearCookie("AccessToken", accessTokenOptions)
-    .clearCookie("RefreshToken", refreshTokenOptions)
+    .clearCookie("accessToken", accessTokenOptions)
+    .clearCookie("refreshToken", refreshTokenOptions)
     .json(new ApiResponse(200, {}, "User deleted successfully"))
 })
 
