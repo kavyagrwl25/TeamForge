@@ -46,3 +46,25 @@ export const isValidRepoLink = (link) => {
   // simple URL check
   return /^https?:\/\/.+/.test(trimmed);
 };
+
+export const isValidProjectStatus = (status) => {
+    if (typeof status !== "string") return false;
+
+    return PROJECT_STATUS.includes(status.trim().toLowerCase());
+};
+
+export const isValidProjectType = (type) => {
+    if (typeof type !== "string") return false;
+
+    return PROJECT_TYPE.includes(type.trim().toLowerCase());
+};
+
+export const isValidRolesNeeded = (rolesNeeded) => {
+    if (!Array.isArray(rolesNeeded) || rolesNeeded.length === 0) {
+        return false;
+    }
+
+    return rolesNeeded.every(role =>
+        typeof role === "string" && role.trim().length > 0
+    );
+};
