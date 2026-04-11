@@ -1,3 +1,5 @@
+import { PROJECT_TYPE, PROJECT_STATUS } from "../constants.js";
+
 export const isValidProjectTitle = (title) => {
   if (typeof title !== "string") return false;
 
