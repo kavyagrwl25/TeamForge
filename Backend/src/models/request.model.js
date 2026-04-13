@@ -14,11 +14,11 @@ const requestSchema = new mongoose.Schema(
       required: [true, "Project is required"],
     },
 
-    message: {
+    pitchMessage: {
       type: String,
       trim: true,
       maxlength: [300, "Message cannot exceed 300 characters"],
-      default: "",
+      default: "Hey, I am interested!",
     },
 
     roleRequested: {
