@@ -114,18 +114,41 @@ By turning informal project discovery into a dedicated platform experience, Team
 
 ## Project Structure
 
-    teamforge/
-    ├── controllers/
-    ├── middleware/
-    ├── models/
-    ├── routes/
-    ├── utils/
-    ├── config/
-    ├── app.js
-    ├── server.js
-    └── constants.js
+```bash
+Backend/
+├── src/
+│   ├── config/
+│   │   └── dbConnection.js          # MongoDB connection setup
+│   ├── controllers/
+│   │   ├── project.controller.js    # Handles project-related business logic
+│   │   ├── request.controller.js    # Handles collaboration request logic
+│   │   └── user.controller.js       # Handles authentication and user profile logic
+│   ├── middleware/
+│   │   └── auth.middleware.js       # Verifies JWT and protects private routes
+│   ├── models/
+│   │   ├── project.model.js         # Mongoose schema for projects
+│   │   ├── request.model.js         # Mongoose schema for join requests
+│   │   └── user.model.js            # Mongoose schema for users
+│   ├── routes/
+│   │   ├── project.routes.js        # API routes for project endpoints
+│   │   ├── request.routes.js        # API routes for request endpoints
+│   │   └── user.routes.js           # API routes for authentication and user endpoints
+│   ├── utils/
+│   │   ├── ApiError.js              # Custom error class for standardized error handling
+│   │   ├── ApiResponse.js           # Standardized success response wrapper
+│   │   ├── AsyncHandler.js          # Utility to handle async route errors cleanly
+│   │   ├── projectValidators.js     # Validation helpers for project-related fields
+│   │   └── validators.js            # Common validation helpers for user input
+│   ├── app.js                       # Express app setup, middleware, and route mounting
+│   ├── constants.js                 # Application-wide constants
+│   └── server.js                    # Entry point that starts the server
+├── .env                             # Environment variables
+├── .gitignore                       # Files and folders ignored by Git
+├── package-lock.json                # Exact dependency lock file
+├── package.json                     # Project metadata, scripts, and dependencies
+└── README.md                        # Project documentation
 
----
+```
 
 ## Architecture Highlights
 
