@@ -107,7 +107,7 @@ By turning informal project discovery into a dedicated platform experience, Team
 - Postman
 
 ### Testing
-- Jest
+- vitest
 - Supertest
 
 ---
@@ -326,7 +326,7 @@ Planned improvements include:
 
 Testing support is planned using:
 
-- Jest for test execution
+- vitest for test execution
 - Supertest for API endpoint testing
 
 ---
@@ -349,7 +349,7 @@ It is intended to be both a strong portfolio project and a practical learning pr
 
 ## Author
 
-**Kavy**
+**Kavya Agrawal**
 
 Engineering student passionate about:
 
