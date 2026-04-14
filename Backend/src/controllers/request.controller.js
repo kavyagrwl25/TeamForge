@@ -47,9 +47,31 @@ const createRequest = AsyncHandler(async (req, res) => {
         .json(new ApiResponse(201, populatedRequest, "Request created successfully"));
 });
 
+const getRequestsForMyProject = AsyncHandler(async (req, res) => {
+    const { projectId } = req.params
+    if (!projectId) {
+        throw new ApiError(400, "Project id is required")
+    }
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        throw new ApiError(400, "Invalid project id")
+    }
+    const project = await Project.findById(projectId)
+    if (!project) {
+        throw new ApiError(404, "Project not found")
+    }
+    if (project.createdBy.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not allowed to view requests for this project")
+    }
+    const requests = await Request.find({ project: projectId })
+    .populate("requestedBy", "fullName userName email")
+    .sort({ createdAt: -1 })
 
+    return res
+        .status(200)
+        .json(new ApiResponse(200, requests, "Requests fetched successfully"))
+})
 
-export { createRequest }
+export { createRequest, getRequestsForMyProject }
 
 // createRequest                :done
 // getRequestsForMyProject      :
