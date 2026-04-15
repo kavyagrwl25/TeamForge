@@ -71,10 +71,25 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
         .json(new ApiResponse(200, requests, "Requests fetched successfully"))
 })
 
-export { createRequest, getRequestsForMyProject }
+const getMySentRequests = AsyncHandler( async(req, res) => {
+    const userId = req.user?._id
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(400, "Invalid User id")
+    }
+    const requests = await Request.find({ requestedBy: userId })
+    .populate("project", "title description status")
+    .sort({ createdAt: -1 })
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, requests, "Requests fetched successfully"))
+})
+
+
+export { createRequest, getRequestsForMyProject, getMySentRequests }
 
 // createRequest                :done
-// getRequestsForMyProject      :
-// getMySentRequests
+// getRequestsForMyProject      :done
+// getMySentRequests            :done
 // updateRequestStatus
 // deleteRequest
