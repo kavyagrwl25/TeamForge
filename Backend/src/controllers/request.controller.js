@@ -11,10 +11,19 @@ const createRequest = AsyncHandler(async (req, res) => {
     const { projectId } = req.params;
     const { roleRequested, pitchMessage } = req.body;
 
+    if (typeof roleRequested !== "string" || !roleRequested.trim()) {
+        throw new ApiError(400, "Role requested is required")
+    }
+    if (pitchMessage !== undefined && typeof pitchMessage !== "string") {
+        throw new ApiError(400, "Pitch message must be a string")
+    }
+
     if (!projectId) {
         throw new ApiError(400, "Project id is required");
     }
-
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        throw new ApiError(400, "Invalid project id");
+    }
     const projectExists = await Project.findById(projectId);
     if (!projectExists) {
         throw new ApiError(404, "Project not found");
@@ -75,9 +84,6 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
 
 const getMySentRequests = AsyncHandler( async(req, res) => {
     const userId = req.user?._id
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(400, "Invalid User id")
-    }
     const requests = await Request.find({ requestedBy: userId })
     .populate("project", "title description status")
     .sort({ createdAt: -1 })
@@ -88,32 +94,46 @@ const getMySentRequests = AsyncHandler( async(req, res) => {
 })
 
 const updateRequestStatus = AsyncHandler(async (req, res) => {
-    const userId = req.user?._id
-    const { requestId } = req.params
-    const { status } = req.body
+    const userId = req.user?._id;
+    const { requestId } = req.params;
+    const { status } = req.body;
+
+    if (!isValidRequestStatus(status)) {
+        throw new ApiError(400, "Invalid request status");
+    }
+    if (status.trim().toLowerCase() === "pending") {
+        throw new ApiError(400, "Request cannot be updated back to pending");
+    }
     if (!requestId) {
-        throw new ApiError(400, "Request id is required")
+        throw new ApiError(400, "Request id is required");
     }
     if (!mongoose.Types.ObjectId.isValid(requestId)) {
-        throw new ApiError(400, "Invalid request id")
+        throw new ApiError(400, "Invalid request id");
     }
-    if (!isValidRequestStatus(status)) {
-        throw new ApiError(400, "Invalid request status")
-    }
-    const request = await Request.findById(requestId).populate("project")
+    const request = await Request.findById(requestId).populate("project");
+
     if (!request) {
-        throw new ApiError(404, "Request not found")
+        throw new ApiError(404, "Request not found");
     }
     if (request.project.createdBy.toString() !== userId.toString()) {
-        throw new ApiError(403, "You are not allowed to update this request")
-    } 
-    request.status = status.trim().toLowerCase()
-    await request.save()
+        throw new ApiError(403, "You are not allowed to update this request");
+    }
+    if (request.status !== "pending") {
+        throw new ApiError(400, "Only pending requests can be updated");
+    }
+    
+    request.status = status.trim().toLowerCase();
+    await request.save();
+
+    const updatedRequest = await Request.findById(request._id)
+        .populate("requestedBy", "fullName userName email")
+        .populate("project", "title description techStack techRoles projectType status");
 
     return res
-    .status(200)
-    .json(new ApiResponse(200, request, "Request status updated successfully"))
+        .status(200)
+        .json(new ApiResponse(200, updatedRequest, "Request status updated successfully"));
 })
+
 
 export { createRequest, getRequestsForMyProject, getMySentRequests, updateRequestStatus }
 
