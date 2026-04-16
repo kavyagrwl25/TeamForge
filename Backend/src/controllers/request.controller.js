@@ -3,6 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { AsyncHandler } from "../utils/AsyncHandler.js";
 import { Project } from "../models/project.model.js";
+import { isValidRequestStatus } from "../utils/requestValidators.js";
+import mongoose from "mongoose";
 
 const createRequest = AsyncHandler(async (req, res) => {
     const requestedBy = req.user._id;
@@ -85,8 +87,35 @@ const getMySentRequests = AsyncHandler( async(req, res) => {
     .json(new ApiResponse(200, requests, "Requests fetched successfully"))
 })
 
+const updateRequestStatus = AsyncHandler(async (req, res) => {
+    const userId = req.user?._id
+    const { requestId } = req.params
+    const { status } = req.body
+    if (!requestId) {
+        throw new ApiError(400, "Request id is required")
+    }
+    if (!mongoose.Types.ObjectId.isValid(requestId)) {
+        throw new ApiError(400, "Invalid request id")
+    }
+    if (!isValidRequestStatus(status)) {
+        throw new ApiError(400, "Invalid request status")
+    }
+    const request = await Request.findById(requestId).populate("project")
+    if (!request) {
+        throw new ApiError(404, "Request not found")
+    }
+    if (request.project.createdBy.toString() !== userId.toString()) {
+        throw new ApiError(403, "You are not allowed to update this request")
+    } 
+    request.status = status.trim().toLowerCase()
+    await request.save()
 
-export { createRequest, getRequestsForMyProject, getMySentRequests }
+    return res
+    .status(200)
+    .json(new ApiResponse(200, request, "Request status updated successfully"))
+})
+
+export { createRequest, getRequestsForMyProject, getMySentRequests, updateRequestStatus }
 
 // createRequest                :done
 // getRequestsForMyProject      :done

@@ -34,39 +34,39 @@ export const isValidStringArray = (arr) => {
   }
 
   return true;
-};
+}
 
 export const isValidRepoLink = (link) => {
   if (link === undefined || link === null) return true; // optional field
 
   if (typeof link !== "string") return false;
 
-  const trimmed = link.trim();
+  const trimmed = link.trim()
 
   if (!trimmed) return true; // allow empty string
 
   // simple URL check
-  return /^https?:\/\/.+/.test(trimmed);
-};
+  return /^https?:\/\/.+/.test(trimmed)
+}
 
 export const isValidProjectStatus = (status) => {
-    if (typeof status !== "string") return false;
+    if (typeof status !== "string") return false
 
-    return PROJECT_STATUS.includes(status.trim().toLowerCase());
-};
+    return PROJECT_STATUS.includes(status.trim().toLowerCase())
+}
 
 export const isValidProjectType = (type) => {
-    if (typeof type !== "string") return false;
+    if (typeof type !== "string") return false
 
-    return PROJECT_TYPE.includes(type.trim().toLowerCase());
-};
+    return PROJECT_TYPE.includes(type.trim().toLowerCase())
+}
 
 export const isValidRolesNeeded = (rolesNeeded) => {
     if (!Array.isArray(rolesNeeded) || rolesNeeded.length === 0) {
-        return false;
+        return false
     }
 
     return rolesNeeded.every(role =>
         typeof role === "string" && role.trim().length > 0
-    );
-};
+    )
+}
