@@ -1,4 +1,4 @@
-import { AsyncHandler } from "../utils/AsyncHandler.js"             // for named export, import with braces
+import { AsyncHandler } from "../utils/AsyncHandler.js"            
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"                
@@ -9,14 +9,14 @@ const accessTokenOptions = {
     httpOnly: true,
     secure: false,
     sameSite: "strict",
-    maxAge: 15 * 60 * 1000 // 15 min
+    maxAge: 15 * 60 * 1000 
 };
 
 const refreshTokenOptions = {
     httpOnly: true,
     secure: false,
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000 
 };
 
 const generateTokens =  async(userId) => {

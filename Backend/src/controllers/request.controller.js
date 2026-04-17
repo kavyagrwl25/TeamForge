@@ -170,5 +170,5 @@ export { createRequest, getRequestsForMyProject, getMySentRequests, updateReques
 // createRequest                :done
 // getRequestsForMyProject      :done
 // getMySentRequests            :done
-// updateRequestStatus
-// deleteRequest
+// updateRequestStatus          :done
+// deleteRequest                :done
