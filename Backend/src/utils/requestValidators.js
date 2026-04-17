@@ -1,4 +1,4 @@
-import { REQUEST_STATUS } from "../constants";
+import { REQUEST_STATUS } from "../constants.js";
 
 export const isValidRequestStatus = (status) => {
     if (typeof status !== "string") return false;

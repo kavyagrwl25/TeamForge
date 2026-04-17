@@ -134,8 +134,38 @@ const updateRequestStatus = AsyncHandler(async (req, res) => {
         .json(new ApiResponse(200, updatedRequest, "Request status updated successfully"));
 })
 
+const deleteRequest = AsyncHandler( async(req, res) => {
+    // get the request id from req.params
+    // validate requestId
+    // check if request exists or not
+    // delete if exists
+    const { requestId } = req.params
+    if(!requestId){
+        throw new ApiError(400, "Request Id needed")
+    }
+    if (!mongoose.Types.ObjectId.isValid(requestId)) {
+        throw new ApiError(400, "Invalid request id");
+    }
+    const request = await Request.findById( requestId )
+    if(!request){
+        throw new ApiError(404, "Request not found")
+    }
+    if (request.requestedBy.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "Not authorized to delete this request");
+    }
+    if (request.status === "accepted") {
+        throw new ApiError(400, "Accepted requests cannot be deleted");
+    }
+    await Request.findByIdAndDelete( requestId )
 
-export { createRequest, getRequestsForMyProject, getMySentRequests, updateRequestStatus }
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Request deleted successfully"))
+})
+
+
+
+export { createRequest, getRequestsForMyProject, getMySentRequests, updateRequestStatus, deleteRequest }
 
 // createRequest                :done
 // getRequestsForMyProject      :done
