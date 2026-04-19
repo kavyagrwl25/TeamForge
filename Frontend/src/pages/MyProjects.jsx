@@ -61,7 +61,18 @@ function MyProjects() {
 
         <div className="grid gap-4">
           {projects.map((project) => (
-            <ProjectCard key={project._id} project={project} />
+            <ProjectCard
+              key={project._id}
+              project={project}
+              action={
+                <Link
+                  to={`/projects/${project._id}/requests`}
+                  className="inline-block rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-700"
+                >
+                  View Requests
+                </Link>
+              }
+            />
           ))}
         </div>
       </main>

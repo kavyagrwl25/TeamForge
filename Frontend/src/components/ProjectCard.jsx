@@ -1,4 +1,4 @@
-function ProjectCard({ project }) {
+function ProjectCard({ project, action }) {
   const techStack = project.techStack || [];
   const roles = project.techRoles || project.rolesNeeded || [];
   const ownerName = project.createdBy?.fullName || project.createdBy?.userName;
@@ -72,6 +72,8 @@ function ProjectCard({ project }) {
           </a>
         )}
       </div>
+
+      {action && <div className="mt-5 border-t border-slate-100 pt-4">{action}</div>}
     </article>
   );
 }

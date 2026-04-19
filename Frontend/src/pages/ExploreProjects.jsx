@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import JoinRequestModal from "../components/JoinRequestModal";
 import ProjectCard from "../components/ProjectCard";
 import { getExploreProjects } from "../services/projectServices";
 
 function ExploreProjects() {
   const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -53,10 +55,29 @@ function ExploreProjects() {
 
         <div className="grid gap-4">
           {projects.map((project) => (
-            <ProjectCard key={project._id} project={project} />
+            <ProjectCard
+              key={project._id}
+              project={project}
+              action={
+                <button
+                  type="button"
+                  onClick={() => setSelectedProject(project)}
+                  className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-700"
+                >
+                  Request to Join
+                </button>
+              }
+            />
           ))}
         </div>
       </main>
+
+      {selectedProject && (
+        <JoinRequestModal
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
+        />
+      )}
     </div>
   );
 }

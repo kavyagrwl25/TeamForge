@@ -64,7 +64,7 @@ function Dashboard({ user, onLogout }) {
           {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
         </section>
 
-        <section className="mt-6 grid gap-4 sm:grid-cols-3">
+        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             to="/projects/create"
             className="rounded-lg bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
@@ -92,6 +92,16 @@ function Dashboard({ user, onLogout }) {
             <p className="font-semibold text-slate-900">Explore Projects</p>
             <p className="mt-2 text-sm text-slate-600">
               Browse open projects from other users.
+            </p>
+          </Link>
+
+          <Link
+            to="/requests/me"
+            className="rounded-lg bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <p className="font-semibold text-slate-900">My Sent Requests</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Track requests you have sent to join projects.
             </p>
           </Link>
         </section>

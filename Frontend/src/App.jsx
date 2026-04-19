@@ -7,6 +7,8 @@ import ChangePassword from "./pages/ChangePassword";
 import CreateProject from "./pages/CreateProject";
 import ExploreProjects from "./pages/ExploreProjects";
 import MyProjects from "./pages/MyProjects";
+import MySentRequests from "./pages/MySentRequests";
+import ProjectRequests from "./pages/ProjectRequests";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { checkAuth as checkAuthService } from "./services/authServices";
 
@@ -102,6 +104,22 @@ function App() {
         element={
           <ProtectedRoute isAuthenticated={isAuthenticated}>
             <CreateProject />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/requests/me"
+        element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <MySentRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectId/requests"
+        element={
+          <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <ProjectRequests />
           </ProtectedRoute>
         }
       />

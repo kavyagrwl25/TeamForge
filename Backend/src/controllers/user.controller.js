@@ -1,7 +1,9 @@
 import { AsyncHandler } from "../utils/AsyncHandler.js"            
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { User } from "../models/user.model.js"                
+import { User } from "../models/user.model.js"       
+import { Project } from "../models/project.model.js"
+import { Request } from "../models/request.model.js"         
 import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio, isValidSkills, isValidSocialLinks } from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
@@ -243,27 +245,51 @@ const getCurrentUser = AsyncHandler(async(req, res) => {
     .json(new ApiResponse(200, user, "User fetched successfully"))
 })
 
-const deleteUser = AsyncHandler(async(req, res) => {
-    const { password } = req.body
-    if(!isValidPassword(password)){
-        throw new ApiError(400, "Invalid password")
+const deleteUser = AsyncHandler(async (req, res) => {
+    const { password } = req.body;
+
+    if (!isValidPassword(password)) {
+        throw new ApiError(400, "Invalid password");
     }
-    const user = await User.findById(req.user?._id).select("+password")
-    if(!user){
-        throw new ApiError(404, "User not found")
+
+    const user = await User.findById(req.user?._id).select("+password");
+    if (!user) {
+        throw new ApiError(404, "User not found");
     }
-    const isPasswordCorrect = await user.isPasswordCorrect(password)
-    if(!isPasswordCorrect){
-        throw new ApiError(400, "Invalid password")
+
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid password");
     }
-    await User.findByIdAndDelete(user._id)
+
+    const userId = user._id;
+
+    // find all projects created by this user
+    const userProjects = await Project.find({ createdBy: userId }).select("_id");
+    const projectIds = userProjects.map((project) => project._id);
+
+    // delete:
+    // 1) requests sent by this user
+    // 2) requests received on this user's projects
+    await Request.deleteMany({
+        $or: [
+            { requestedBy: userId },
+            { project: { $in: projectIds } }
+        ]
+    });
+
+    // delete all projects created by this user
+    await Project.deleteMany({ createdBy: userId });
+
+    // finally delete user
+    await User.findByIdAndDelete(userId);
 
     return res
-    .status(200)
-    .clearCookie("accessToken", accessTokenOptions)
-    .clearCookie("refreshToken", refreshTokenOptions)
-    .json(new ApiResponse(200, {}, "User deleted successfully"))
-})
+        .status(200)
+        .clearCookie("accessToken", accessTokenOptions)
+        .clearCookie("refreshToken", refreshTokenOptions)
+        .json(new ApiResponse(200, {}, "User deleted successfully"));
+});
 
 export { register, login, logout, refreshTokens, changePassword, updateProfile, getCurrentUser, deleteUser }
 
