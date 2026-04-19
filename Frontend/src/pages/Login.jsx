@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authServices";
 
-function Login() {
+function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -26,13 +26,11 @@ function Login() {
     e.preventDefault();
 
     setError("");
+    setLoading(true);
 
     try {
-      setLoading(true);
-
       const data = await loginUser(formData);
-
-      console.log("Login response:", data);
+      onLoginSuccess(data.data.user);
 
       // reset form
       setFormData({
@@ -41,11 +39,9 @@ function Login() {
       });
 
       // redirect after login
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
 
     } catch (err) {
-      console.error(err);
-
       setError(
         err.response?.data?.message || "Login failed. Please try again."
       );
@@ -58,7 +54,7 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg"
+        className="w-full max-w-md rounded-lg bg-white p-8 shadow-md"
       >
         <h2 className="text-3xl font-bold text-center text-slate-800 mb-6">
           Login to TeamForge
@@ -72,7 +68,7 @@ function Login() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
           />
 
           <input
@@ -82,13 +78,13 @@ function Login() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition duration-200"
+            className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
@@ -99,6 +95,13 @@ function Login() {
             {error}
           </p>
         )}
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          New to TeamForge?{" "}
+          <Link to="/register" className="font-medium text-slate-900 underline">
+            Create an account
+          </Link>
+        </p>
       </form>
     </div>
   );
