@@ -25,6 +25,18 @@ export const changePassword = async (passwordData) => {
   return response.data;
 };
 
+export const updateProfile = async (profileData) => {
+  const response = await API.patch("/users/me", profileData);
+  return response.data;
+};
+
+export const deleteAccount = async (deleteData) => {
+  const response = await API.delete("/users/me", {
+    data: deleteData,
+  });
+  return response.data;
+};
+
 export const getCurrentUser = async () => {
   const response = await API.get("/users/me");
   return response.data;

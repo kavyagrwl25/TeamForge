@@ -37,10 +37,10 @@ function ExploreProjects() {
           </div>
 
           <Link
-            to="/dashboard"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-center font-medium text-slate-700 transition hover:bg-white"
+            to="/projects/create"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-center font-medium text-white transition hover:bg-slate-700"
           >
-            Dashboard
+            Create Project
           </Link>
         </div>
 

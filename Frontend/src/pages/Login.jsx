@@ -39,7 +39,7 @@ function Login({ onLoginSuccess }) {
       });
 
       // redirect after login
-      navigate("/dashboard", { replace: true });
+      navigate("/projects/explore", { replace: true });
 
     } catch (err) {
       setError(

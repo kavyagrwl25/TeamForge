@@ -8,7 +8,6 @@ function ChangePassword() {
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmNewPassword: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -30,17 +29,8 @@ function ChangePassword() {
     setError("");
     setSuccess("");
 
-    if (
-      !formData.currentPassword ||
-      !formData.newPassword ||
-      !formData.confirmNewPassword
-    ) {
+    if (!formData.currentPassword || !formData.newPassword) {
       setError("Please fill in all password fields.");
-      return;
-    }
-
-    if (formData.newPassword !== formData.confirmNewPassword) {
-      setError("New password and confirm password must match.");
       return;
     }
 
@@ -56,11 +46,10 @@ function ChangePassword() {
       setFormData({
         currentPassword: "",
         newPassword: "",
-        confirmNewPassword: "",
       });
 
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate("/projects/explore", { replace: true });
       }, 1200);
     } catch (err) {
       setError(
@@ -103,15 +92,6 @@ function ChangePassword() {
               className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
 
-            <input
-              type="password"
-              name="confirmNewPassword"
-              placeholder="Confirm new password"
-              value={formData.confirmNewPassword}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-
             <button
               type="submit"
               disabled={loading}
@@ -125,10 +105,10 @@ function ChangePassword() {
           {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
 
           <Link
-            to="/dashboard"
+            to="/projects/explore"
             className="mt-6 inline-block text-sm font-medium text-slate-700 underline"
           >
-            Back to dashboard
+            Back to explore projects
           </Link>
         </form>
       </main>
