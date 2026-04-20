@@ -6,6 +6,7 @@ export const createJoinRequest = async (projectId, requestData) => {
 };
 
 export const getMySentRequests = async () => {
+  // API call for My Requests: GET /api/v1/requests/me
   const response = await API.get("/requests/me");
   return response.data;
 };

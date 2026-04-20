@@ -7,7 +7,7 @@ import {
   updateProfile,
 } from "../services/authServices";
 
-function Settings({ onAccountDeleted }) {
+function Settings({ onAccountDeleted, onProfileUpdated }) {
   const navigate = useNavigate();
 
   const [initialProfile, setInitialProfile] = useState(null);
@@ -153,6 +153,7 @@ function Settings({ onAccountDeleted }) {
         github: user.socialLinks?.github || "",
         linkedin: user.socialLinks?.linkedin || "",
       });
+      onProfileUpdated?.(user);
       setProfileSuccess("Profile updated successfully.");
     } catch (err) {
       setProfileError(

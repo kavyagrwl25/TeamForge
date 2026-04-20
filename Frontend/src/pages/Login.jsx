@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../services/authServices";
+import { getCurrentUser, loginUser } from "../services/authServices";
 
 function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -29,8 +29,11 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const data = await loginUser(formData);
-      onLoginSuccess(data.data.user);
+      await loginUser(formData);
+
+      // API call after login: fetch the currently logged-in user from cookies.
+      const currentUserResponse = await getCurrentUser();
+      onLoginSuccess(currentUserResponse.data);
 
       // reset form
       setFormData({
@@ -38,7 +41,7 @@ function Login({ onLoginSuccess }) {
         password: "",
       });
 
-      // redirect after login
+      // Redirect after login to the main Explore Projects screen.
       navigate("/projects/explore", { replace: true });
 
     } catch (err) {

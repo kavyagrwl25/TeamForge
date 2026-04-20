@@ -38,6 +38,7 @@ export const deleteAccount = async (deleteData) => {
 };
 
 export const getCurrentUser = async () => {
+  // API call for the app-load auth check: GET /api/v1/users/me
   const response = await API.get("/users/me");
   return response.data;
 };
@@ -48,14 +49,5 @@ export const refreshTokens = async () => {
 };
 
 export const checkAuth = async () => {
-  try {
-    return await getCurrentUser();
-  } catch (error) {
-    if (error.response?.status !== 401) {
-      throw error;
-    }
-
-    await refreshTokens();
-    return await getCurrentUser();
-  }
+  return await getCurrentUser();
 };

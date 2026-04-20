@@ -11,8 +11,9 @@ function MyProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
+        // API call for projects created by the logged-in user: GET /api/v1/projects/me
         const response = await getMyProjects();
-        setProjects(response.data);
+        setProjects(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load your projects."
@@ -60,9 +61,9 @@ function MyProjects() {
         )}
 
         <div className="grid gap-4">
-          {projects.map((project) => (
+          {projects.map((project, index) => (
             <ProjectCard
-              key={project._id}
+              key={project?._id || index}
               project={project}
               action={
                 <Link

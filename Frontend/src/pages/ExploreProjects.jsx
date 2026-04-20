@@ -13,8 +13,9 @@ function ExploreProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
+        // API call for the main Explore Projects screen: GET /api/v1/projects
         const response = await getExploreProjects();
-        setProjects(response.data);
+        setProjects(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load projects to explore."
@@ -54,9 +55,9 @@ function ExploreProjects() {
         )}
 
         <div className="grid gap-4">
-          {projects.map((project) => (
+          {projects.map((project, index) => (
             <ProjectCard
-              key={project._id}
+              key={project?._id || index}
               project={project}
               action={
                 <button

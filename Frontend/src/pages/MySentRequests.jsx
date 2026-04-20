@@ -15,8 +15,9 @@ function MySentRequests() {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        // API call for requests sent by the logged-in user: GET /api/v1/requests/me
         const response = await getMySentRequests();
-        setRequests(response.data);
+        setRequests(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load your sent requests."
@@ -75,8 +76,8 @@ function MySentRequests() {
         )}
 
         <div className="grid gap-4">
-          {requests.map((request) => (
-            <article key={request._id} className="rounded-lg bg-white p-5 shadow-sm">
+          {requests.map((request, index) => (
+            <article key={request?._id || index} className="rounded-lg bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">
@@ -88,7 +89,7 @@ function MySentRequests() {
                 </div>
 
                 <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium capitalize text-slate-700">
-                  {request.status}
+                  {request.status || "status unavailable"}
                 </span>
               </div>
 
