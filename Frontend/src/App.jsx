@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ChangePassword from "./pages/ChangePassword";
 import CreateProject from "./pages/CreateProject";
+import EditProject from "./pages/EditProject";
 import ExploreProjects from "./pages/ExploreProjects";
 import MyProjects from "./pages/MyProjects";
 import MySentRequests from "./pages/MySentRequests";
@@ -13,36 +20,95 @@ import Settings from "./pages/Settings";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { checkAuth as checkAuthService } from "./services/authServices";
+import {
+  checkAuth as checkAuthService,
+  checkPublicAuth,
+  clearAuthSessionHint,
+  hasAuthSessionHint,
+  markAuthSessionKnown,
+  setAuthFailureHandler,
+} from "./services/authServices";
+
+const publicRoutes = ["/login", "/register"];
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    publicRoutes.includes(window.location.pathname) ? false : null
+  );
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    const removeAuthFailureHandler = setAuthFailureHandler(() => {
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      clearAuthSessionHint();
+      navigate("/login", { replace: true });
+    });
+
     const checkUserSession = async () => {
+      if (publicRoutes.includes(location.pathname)) {
+        setIsAuthenticated(false);
+
+        if (!hasAuthSessionHint()) {
+          // Public route handling: first-time visitors should see /login or
+          // /register immediately. With no frontend session hint, we skip
+          // /users/me entirely to avoid noisy logged-out 401 responses.
+          setCurrentUser(null);
+          return;
+        }
+
+        try {
+          // Public route handling: /login and /register are allowed to load
+          // without a valid session. This quiet check only redirects users who
+          // are already authenticated, and it never calls refresh-tokens.
+          const response = await checkPublicAuth();
+          setCurrentUser(response.data);
+          markAuthSessionKnown();
+          setIsAuthenticated(true);
+        } catch {
+          // A 401 here usually means "visitor is not logged in", which is
+          // normal on public pages and should not be treated as a fatal error.
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          clearAuthSessionHint();
+        }
+
+        return;
+      }
+
+      setIsAuthenticated(null);
+
       try {
-        // Auth check happens here on every app load/refresh.
-        // The backend reads the auth cookies because axios uses withCredentials.
+        // Protected route handling: protected pages use the normal auth check.
+        // If access token is expired, the axios interceptor may refresh it.
         const response = await checkAuthService();
         setCurrentUser(response.data);
+        markAuthSessionKnown();
         setIsAuthenticated(true);
       } catch {
         setCurrentUser(null);
         setIsAuthenticated(false);
+        clearAuthSessionHint();
       }
     };
 
     checkUserSession();
-  }, []);
+
+    return removeAuthFailureHandler;
+  }, [location.pathname, navigate]);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
+    markAuthSessionKnown();
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    clearAuthSessionHint();
     setIsAuthenticated(false);
   };
 
@@ -50,20 +116,24 @@ function App() {
     setCurrentUser(user);
   };
 
-  if (isAuthenticated === null) {
+  if (!isPublicRoute && isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-700">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] text-slate-300">
         Checking your session...
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
+    // Root background: one dark premium gradient now covers every route and future page.
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] text-slate-100">
+      {/* Subtle radial glows add depth while keeping the dashboard calm and readable. */}
+      <div className="pointer-events-none absolute -left-32 top-24 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-20 right-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
       {isAuthenticated && (
         <Navbar currentUser={currentUser} onLogout={handleLogout} />
       )}
-      <main className="flex-1">
+      <main className="relative z-10 flex-1">
         <Routes>
           {/* Redirect decision happens here for the app's default screen. */}
           <Route
@@ -138,6 +208,14 @@ function App() {
             }
           />
           <Route
+            path="/projects/:projectId/edit"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <EditProject />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/requests/me"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated}>
@@ -194,7 +272,9 @@ function App() {
           />
         </Routes>
       </main>
-      <Footer />
+      <div className="relative z-10">
+        <Footer />
+      </div>
     </div>
   );
 }

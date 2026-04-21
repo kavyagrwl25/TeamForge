@@ -212,7 +212,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
 
   if (pageLoading) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-700">
+      <div className="min-h-screen px-4 py-8 text-slate-300">
         <main className="mx-auto max-w-5xl">Loading settings...</main>
       </div>
     );
@@ -220,7 +220,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
 
   if (!initialProfile) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 py-8 text-red-500">
+      <div className="min-h-screen px-4 py-8 text-red-300">
         <main className="mx-auto max-w-5xl">
           {profileError || "Could not load settings."}
         </main>
@@ -229,16 +229,16 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <div className="min-h-screen px-4 py-8 text-slate-100">
       <main className="mx-auto max-w-5xl">
         <div className="mb-6">
-          <p className="text-sm font-medium text-slate-500">Account</p>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-sm font-medium text-slate-400">Account</p>
+          <h1 className="text-3xl font-bold text-white">Settings</h1>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-          <section className="rounded-lg bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold">Update Profile</h2>
+          <section className="rounded-lg border border-white/10 bg-slate-900/85 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur">
+            <h2 className="text-xl font-bold text-white">Update Profile</h2>
 
             <form onSubmit={handleProfileSubmit} className="mt-5 space-y-4">
               <input
@@ -247,7 +247,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 placeholder="Full name"
                 value={profileForm.fullName}
                 onChange={handleProfileChange}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <input
@@ -256,7 +256,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 placeholder="Username"
                 value={profileForm.userName}
                 onChange={handleProfileChange}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <textarea
@@ -265,7 +265,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 value={profileForm.bio}
                 onChange={handleProfileChange}
                 rows="4"
-                className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full resize-none rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <input
@@ -274,7 +274,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 placeholder="Skills, separated by commas"
                 value={profileForm.skills}
                 onChange={handleProfileChange}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <input
@@ -283,7 +283,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 placeholder="GitHub profile link"
                 value={profileForm.github}
                 onChange={handleProfileChange}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <input
@@ -292,13 +292,13 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                 placeholder="LinkedIn profile link"
                 value={profileForm.linkedin}
                 onChange={handleProfileChange}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
 
               <button
                 type="submit"
                 disabled={profileLoading}
-                className="rounded-lg bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="rounded-lg bg-sky-500 px-4 py-3 font-medium text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-500"
               >
                 {profileLoading ? "Saving..." : "Save Profile"}
               </button>
@@ -313,8 +313,8 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
           </section>
 
           <div className="space-y-6">
-            <section className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold">Change Password</h2>
+            <section className="rounded-lg border border-white/10 bg-slate-900/85 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur">
+              <h2 className="text-xl font-bold text-white">Change Password</h2>
 
               <form onSubmit={handlePasswordSubmit} className="mt-5 space-y-4">
                 <input
@@ -323,7 +323,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                   placeholder="Current password"
                   value={passwordForm.currentPassword}
                   onChange={handlePasswordChange}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 />
 
                 <input
@@ -332,13 +332,13 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                   placeholder="New password"
                   value={passwordForm.newPassword}
                   onChange={handlePasswordChange}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 />
 
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="rounded-lg bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  className="rounded-lg bg-sky-500 px-4 py-3 font-medium text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-500"
                 >
                   {passwordLoading ? "Changing..." : "Change Password"}
                 </button>
@@ -354,11 +354,11 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
               )}
             </section>
 
-            <section className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-red-700">
+            <section className="rounded-lg border border-red-500/20 bg-red-500/10 p-6 shadow-2xl shadow-slate-950/30">
+              <h2 className="text-xl font-bold text-red-200">
                 Delete Account
               </h2>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-slate-300">
                 This permanently deletes your account, projects, and related
                 requests.
               </p>
@@ -378,12 +378,12 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
           <form
             onSubmit={handleDeleteSubmit}
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+            className="w-full max-w-md rounded-lg border border-white/10 bg-slate-900 p-6 text-slate-100 shadow-2xl shadow-slate-950/50"
           >
-            <h2 className="text-2xl font-bold text-red-700">
+            <h2 className="text-2xl font-bold text-red-200">
               Confirm Account Delete
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-300">
               Enter your password to confirm this action.
             </p>
 
@@ -392,7 +392,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
               placeholder="Password"
-              className="mt-5 w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="mt-5 w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-red-400"
             />
 
             {deleteError && (
@@ -414,7 +414,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
                   setDeletePassword("");
                   setDeleteError("");
                 }}
-                className="rounded-lg border border-slate-300 px-4 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
+                className="rounded-lg border border-white/10 px-4 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
               >
                 Cancel
               </button>

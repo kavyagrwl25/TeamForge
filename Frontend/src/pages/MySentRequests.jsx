@@ -49,65 +49,65 @@ function MySentRequests() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <div className="min-h-screen px-4 py-8 text-slate-100">
       <main className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-slate-500">Requests</p>
-            <h1 className="text-3xl font-bold">My Sent Requests</h1>
+            <p className="text-sm font-medium text-slate-400">Requests</p>
+            <h1 className="text-3xl font-bold text-white">My Sent Requests</h1>
           </div>
 
           <Link
             to="/projects/explore"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-center font-medium text-slate-700 transition hover:bg-white"
+            className="rounded-lg border border-white/10 px-4 py-2 text-center font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             Explore Projects
           </Link>
         </div>
 
-        {loading && <p className="text-slate-600">Loading requests...</p>}
+        {loading && <p className="text-slate-300">Loading requests...</p>}
         {error && <p className="mb-4 text-red-500">{error}</p>}
         {success && <p className="mb-4 text-green-600">{success}</p>}
 
         {!loading && !error && requests.length === 0 && (
-          <div className="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+          <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
             You have not sent any join requests yet.
           </div>
         )}
 
         <div className="grid gap-4">
           {requests.map((request, index) => (
-            <article key={request?._id || index} className="rounded-lg bg-white p-5 shadow-sm">
+            <article key={request?._id || index} className="rounded-lg border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/30">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">
+                  <h2 className="text-xl font-bold text-white">
                     {request.project?.title || "Project unavailable"}
                   </h2>
-                  <p className="mt-2 text-slate-600">
+                  <p className="mt-2 text-slate-300">
                     {request.project?.description || "No description available."}
                   </p>
                 </div>
 
-                <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium capitalize text-slate-700">
+                <span className="w-fit rounded-full bg-slate-800 px-3 py-1 text-sm font-medium capitalize text-slate-300">
                   {request.status || "status unavailable"}
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
                 <p>
-                  <span className="font-semibold text-slate-800">Role:</span>{" "}
+                  <span className="font-semibold text-white">Role:</span>{" "}
                   {request.roleRequested || "Not provided"}
                 </p>
                 {request.createdAt && (
                   <p>
-                    <span className="font-semibold text-slate-800">Sent:</span>{" "}
+                    <span className="font-semibold text-white">Sent:</span>{" "}
                     {new Date(request.createdAt).toLocaleDateString()}
                   </p>
                 )}
               </div>
 
-              <p className="mt-4 text-slate-600">
-                <span className="font-semibold text-slate-800">Pitch:</span>{" "}
+              <p className="mt-4 text-slate-300">
+                <span className="font-semibold text-white">Pitch:</span>{" "}
                 {request.pitchMessage || "No pitch message provided."}
               </p>
 

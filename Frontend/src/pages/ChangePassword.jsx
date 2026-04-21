@@ -62,14 +62,14 @@ function ChangePassword() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <div className="min-h-screen px-4 py-8 text-slate-100">
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center">
         <form
           onSubmit={handleSubmit}
-          className="w-full rounded-lg bg-white p-8 shadow-md"
+          className="w-full rounded-lg border border-white/10 bg-slate-900/85 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur"
         >
-          <p className="text-sm font-medium text-slate-500">Account security</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-800">
+          <p className="text-sm font-medium text-slate-400">Account security</p>
+          <h1 className="mt-2 text-3xl font-bold text-white">
             Change Password
           </h1>
 
@@ -80,7 +80,7 @@ function ChangePassword() {
               placeholder="Current password"
               value={formData.currentPassword}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
 
             <input
@@ -89,13 +89,13 @@ function ChangePassword() {
               placeholder="New password"
               value={formData.newPassword}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="w-full rounded-lg bg-sky-500 py-3 font-medium text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-500"
             >
               {loading ? "Changing password..." : "Change Password"}
             </button>
@@ -106,7 +106,7 @@ function ChangePassword() {
 
           <Link
             to="/projects/explore"
-            className="mt-6 inline-block text-sm font-medium text-slate-700 underline"
+            className="mt-6 inline-block text-sm font-medium text-sky-300 underline"
           >
             Back to explore projects
           </Link>

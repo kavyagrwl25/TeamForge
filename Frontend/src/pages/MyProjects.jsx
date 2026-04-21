@@ -27,35 +27,35 @@ function MyProjects() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <div className="min-h-screen px-4 py-8 text-slate-100">
       <main className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-slate-500">Projects</p>
-            <h1 className="text-3xl font-bold">My Projects</h1>
+            <p className="text-sm font-medium text-slate-400">Projects</p>
+            <h1 className="text-3xl font-bold text-white">My Projects</h1>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               to="/projects/create"
-              className="rounded-lg bg-slate-900 px-4 py-2 text-center font-medium text-white transition hover:bg-slate-700"
+              className="rounded-lg bg-sky-500 px-4 py-2 text-center font-medium text-white transition hover:bg-sky-400"
             >
               Create Project
             </Link>
             <Link
               to="/projects/explore"
-              className="rounded-lg border border-slate-300 px-4 py-2 text-center font-medium text-slate-700 transition hover:bg-white"
+              className="rounded-lg border border-white/10 px-4 py-2 text-center font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               Explore Projects
             </Link>
           </div>
         </div>
 
-        {loading && <p className="text-slate-600">Loading projects...</p>}
+        {loading && <p className="text-slate-300">Loading projects...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
         {!loading && !error && projects.length === 0 && (
-          <div className="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+          <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
             You have not created any projects yet.
           </div>
         )}
@@ -66,12 +66,20 @@ function MyProjects() {
               key={project?._id || index}
               project={project}
               action={
-                <Link
-                  to={`/projects/${project._id}/requests`}
-                  className="inline-block rounded-lg bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-700"
-                >
-                  View Requests
-                </Link>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    to={`/projects/${project._id}/edit`}
+                    className="inline-block rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    to={`/projects/${project._id}/requests`}
+                    className="inline-block rounded-lg bg-sky-500 px-4 py-2 font-medium text-white transition hover:bg-sky-400"
+                  >
+                    View Requests
+                  </Link>
+                </div>
               }
             />
           ))}

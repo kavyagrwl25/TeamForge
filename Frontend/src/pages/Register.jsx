@@ -56,12 +56,12 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-lg bg-white p-8 shadow-md"
+        className="w-full max-w-md rounded-lg border border-white/10 bg-slate-900/85 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur"
       >
-        <h2 className="text-center text-3xl font-bold text-slate-800">
+        <h2 className="text-center text-3xl font-bold text-white">
           Create Account
         </h2>
 
@@ -73,7 +73,7 @@ function Register() {
             value={formData.fullName}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <input
@@ -83,7 +83,7 @@ function Register() {
             value={formData.userName}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <input
@@ -93,7 +93,7 @@ function Register() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <input
@@ -103,13 +103,13 @@ function Register() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-lg bg-sky-500 py-3 font-medium text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-500"
           >
             {loading ? "Creating account..." : "Register"}
           </button>
@@ -123,9 +123,9 @@ function Register() {
           <p className="mt-4 text-center text-sm text-green-600">{success}</p>
         )}
 
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-slate-900 underline">
+          <Link to="/login" className="font-medium text-sky-300 underline">
             Login
           </Link>
         </p>

@@ -47,7 +47,7 @@ function Footer() {
               href="https://github.com/kavyagrwl25"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-700 px-4 py-2 font-medium text-slate-200 transition hover:scale-105 hover:border-white hover:bg-white hover:text-slate-950"
+              className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-700 px-4 py-2 font-medium text-slate-200 transition hover:scale-105 hover:border-slate-300 hover:bg-slate-800 hover:text-white"
             >
               <svg
                 aria-hidden="true"

@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* Global canvas fallback: keeps browser overscroll and future root content on the same dark tone. */
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #020617;
+}

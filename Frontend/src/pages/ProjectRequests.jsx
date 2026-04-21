@@ -9,6 +9,7 @@ function ProjectRequests() {
   const { projectId } = useParams();
 
   const [requests, setRequests] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
   const [error, setError] = useState("");
@@ -54,88 +55,189 @@ function ProjectRequests() {
     }
   };
 
+  const getInitials = (user) => {
+    const name = user?.fullName || user?.userName || user?.email || "User";
+    const words = name.trim().split(/\s+/).filter(Boolean);
+
+    if (words.length >= 2) {
+      return `${words[0][0]}${words[1][0]}`.toUpperCase();
+    }
+
+    return words[0]?.slice(0, 2).toUpperCase() || "U";
+  };
+
+  const selectedRequester = selectedRequest?.requestedBy || {};
+
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <div className="min-h-screen px-4 py-8 text-slate-100">
       <main className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-slate-500">Requests</p>
-            <h1 className="text-3xl font-bold">Project Requests</h1>
+            <p className="text-sm font-medium text-slate-400">Requests</p>
+            <h1 className="text-3xl font-bold text-white">Project Requests</h1>
           </div>
 
           <Link
             to="/projects/me"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-center font-medium text-slate-700 transition hover:bg-white"
+            className="rounded-lg border border-white/10 px-4 py-2 text-center font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             Back to My Projects
           </Link>
         </div>
 
-        {loading && <p className="text-slate-600">Loading requests...</p>}
+        {loading && <p className="text-slate-300">Loading requests...</p>}
         {error && <p className="mb-4 text-red-500">{error}</p>}
         {success && <p className="mb-4 text-green-600">{success}</p>}
 
         {!loading && !error && requests.length === 0 && (
-          <div className="rounded-lg bg-white p-6 text-slate-600 shadow-sm">
+          <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
             No join requests for this project yet.
           </div>
         )}
 
         <div className="grid gap-4">
           {requests.map((request) => (
-            <article key={request._id} className="rounded-lg bg-white p-5 shadow-sm">
+            <article
+              key={request._id}
+              className="rounded-lg border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/30"
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    {request.requestedBy?.fullName || "Unknown user"}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    @{request.requestedBy?.userName || "unknown"} -{" "}
-                    {request.requestedBy?.email || "No email"}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-sm font-bold text-white">
+                    {getInitials(request.requestedBy)}
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRequest(request)}
+                      className="text-left text-xl font-bold text-white transition hover:text-sky-300"
+                    >
+                      {request.requestedBy?.fullName || "Unknown user"}
+                    </button>
+                    <p className="mt-1 text-sm text-slate-400">
+                      @{request.requestedBy?.userName || "unknown"} -{" "}
+                      {request.requestedBy?.email || "No email"}
+                    </p>
+                  </div>
                 </div>
 
-                <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium capitalize text-slate-700">
+                <span className="w-fit rounded-full bg-slate-800 px-3 py-1 text-sm font-medium capitalize text-slate-300">
                   {request.status}
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
                 <p>
-                  <span className="font-semibold text-slate-800">Role:</span>{" "}
+                  <span className="font-semibold text-white">Role:</span>{" "}
                   {request.roleRequested || "Not provided"}
                 </p>
               </div>
 
-              <p className="mt-4 text-slate-600">
-                <span className="font-semibold text-slate-800">Pitch:</span>{" "}
+              <p className="mt-4 text-slate-300">
+                <span className="font-semibold text-white">Pitch:</span>{" "}
                 {request.pitchMessage || "No pitch message provided."}
               </p>
 
-              {request.status === "pending" && (
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={() => handleStatusUpdate(request._id, "accepted")}
-                    disabled={updatingId === request._id}
-                    className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusUpdate(request._id, "rejected")}
-                    disabled={updatingId === request._id}
-                    className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                {/* Profile preview uses only the requester data already included in this request response. */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedRequest(request)}
+                  className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  View Profile
+                </button>
+
+                {request.status === "pending" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleStatusUpdate(request._id, "accepted")
+                      }
+                      disabled={updatingId === request._id}
+                      className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleStatusUpdate(request._id, "rejected")
+                      }
+                      disabled={updatingId === request._id}
+                      className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
             </article>
           ))}
         </div>
       </main>
+
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4">
+          <section className="w-full max-w-lg rounded-lg border border-white/10 bg-slate-900 p-6 text-slate-100 shadow-2xl shadow-slate-950/60">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sky-500 text-xl font-bold text-white">
+                  {getInitials(selectedRequester)}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-400">
+                    Requester profile
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold text-white">
+                    {selectedRequester.fullName || "Unknown user"}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    @{selectedRequester.userName || "unknown"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedRequest(null)}
+                className="rounded-lg border border-white/10 px-3 py-1 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
+                <p className="text-sm font-semibold text-slate-400">Email</p>
+                <p className="mt-1 text-slate-100">
+                  {selectedRequester.email || "No email available"}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
+                <p className="text-sm font-semibold text-slate-400">
+                  Role Requested
+                </p>
+                <p className="mt-1 text-slate-100">
+                  {selectedRequest.roleRequested || "Not provided"}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
+                <p className="text-sm font-semibold text-slate-400">
+                  Pitch Message
+                </p>
+                <p className="mt-1 text-slate-100">
+                  {selectedRequest.pitchMessage || "No pitch message provided."}
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

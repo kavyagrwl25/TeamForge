@@ -16,3 +16,13 @@ export const getExploreProjects = async () => {
   const response = await API.get("/projects");
   return response.data;
 };
+
+export const getProjectById = async (projectId) => {
+  const response = await API.get(`/projects/${projectId}`);
+  return response.data;
+};
+
+export const updateProject = async (projectId, projectData) => {
+  const response = await API.patch(`/projects/${projectId}`, projectData);
+  return response.data;
+};

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createJoinRequest } from "../services/requestServices";
 
-function JoinRequestModal({ project, onClose }) {
+function JoinRequestModal({ project, onClose, onRequestCreated }) {
   const [formData, setFormData] = useState({
     roleRequested: "",
     pitchMessage: "",
@@ -34,11 +34,12 @@ function JoinRequestModal({ project, onClose }) {
     setLoading(true);
 
     try {
-      await createJoinRequest(project._id, {
+      const response = await createJoinRequest(project._id, {
         roleRequested: formData.roleRequested,
         pitchMessage: formData.pitchMessage,
       });
 
+      onRequestCreated?.(response.data);
       setSuccess("Request sent successfully.");
       setFormData({
         roleRequested: "",
@@ -55,11 +56,11 @@ function JoinRequestModal({ project, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-lg border border-white/10 bg-slate-900 p-6 text-slate-100 shadow-2xl shadow-slate-950/50">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-500">Join request</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
+            <p className="text-sm font-medium text-slate-400">Join request</p>
+            <h2 className="mt-1 text-2xl font-bold text-white">
               {project.title}
             </h2>
           </div>
@@ -67,7 +68,7 @@ function JoinRequestModal({ project, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-white/10 px-3 py-1 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
           >
             Close
           </button>
@@ -80,7 +81,7 @@ function JoinRequestModal({ project, onClose }) {
             placeholder="Role requested"
             value={formData.roleRequested}
             onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <textarea
@@ -89,13 +90,13 @@ function JoinRequestModal({ project, onClose }) {
             value={formData.pitchMessage}
             onChange={handleChange}
             rows="4"
-            className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full resize-none rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-lg bg-sky-500 py-3 font-medium text-white transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-500"
           >
             {loading ? "Sending..." : "Send Request"}
           </button>
