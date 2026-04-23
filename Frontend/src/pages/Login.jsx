@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
 
@@ -159,14 +159,17 @@ function ProductPreviewCard() {
   );
 }
 
-function TextInput({ icon: Icon, id, label, className = "", ...props }) {
+function TextInput({ icon, id, label, className = "", ...props }) {
   return (
     <div>
       <label htmlFor={id} className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </label>
       <div className="relative">
-        <Icon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+        {createElement(icon, {
+          className:
+            "pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500",
+        })}
         <input
           id={id}
           className={`w-full rounded-xl border border-white/10 bg-slate-950/65 px-4 py-3 pl-12 text-slate-100 shadow-inner shadow-slate-950/30 outline-none transition placeholder:text-slate-500 hover:border-white/20 focus:border-cyan-300/70 focus:bg-slate-950/80 focus:ring-4 focus:ring-cyan-300/15 ${className}`}

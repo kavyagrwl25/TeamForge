@@ -2,11 +2,53 @@ import { AsyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Project } from "../models/project.model.js";
+import { Request } from "../models/request.model.js";
 import { isValidProjectDescription, isValidProjectTitle, isValidStringArray, isValidProjectStatus, isValidProjectType, isValidRepoLink, isValidRolesNeeded } from "../utils/projectValidators.js";
 import mongoose from "mongoose";
 
+const isTransactionUnsupportedError = (error) => {
+    const message = error?.message?.toLowerCase() || "";
+
+    return (
+        message.includes("transaction numbers are only allowed") ||
+        message.includes("replica set member or mongos") ||
+        message.includes("transactions are not supported")
+    );
+};
+
+const deleteProjectAndRequests = async (projectId, userId, session = null) => {
+    const queryOptions = session ? { session } : {};
+    let projectQuery = Project.findOne({ _id: projectId, createdBy: userId });
+
+    if (session) {
+        projectQuery = projectQuery.session(session);
+    }
+
+    const project = await projectQuery;
+
+    if (!project) {
+        throw new ApiError(404, "Project not found or unauthorized")
+    }
+
+    const deletedRequests = await Request.deleteMany(
+        { project: project._id },
+        queryOptions
+    );
+
+    const deletedProject = await Project.deleteOne(
+        { _id: project._id, createdBy: userId },
+        queryOptions
+    );
+
+    if (deletedProject.deletedCount !== 1) {
+        throw new ApiError(404, "Project not found or unauthorized")
+    }
+
+    return deletedRequests.deletedCount || 0;
+};
+
 const createProject = AsyncHandler(async (req, res) => {
-    const { title, description, techStack, techRoles, projectType, repoLink } = req.body
+    const { title, description, techStack, rolesNeeded, projectType, repoLink } = req.body
 
     if (title === undefined || !isValidProjectTitle(title)) {
         throw new ApiError(400, "Invalid title")
@@ -20,8 +62,8 @@ const createProject = AsyncHandler(async (req, res) => {
         throw new ApiError(400, "Tech stack must be a valid string array")
     }
 
-    if (techRoles !== undefined && !isValidStringArray(techRoles)) {
-        throw new ApiError(400, "Tech roles must be a valid string array")
+    if (rolesNeeded !== undefined && !isValidRolesNeeded(rolesNeeded)) {
+        throw new ApiError(400, "Invalid roles needed")
     }
 
     if (repoLink !== undefined && !isValidRepoLink(repoLink)) {
@@ -35,7 +77,7 @@ const createProject = AsyncHandler(async (req, res) => {
         title: title.trim(),
         description: description.trim(),
         techStack,
-        techRoles,
+        rolesNeeded,
         projectType,
         repoLink,
         createdBy: req.user._id
@@ -53,7 +95,7 @@ const createProject = AsyncHandler(async (req, res) => {
 
 const updateProject = AsyncHandler(async (req, res) => {
     const { projectId } = req.params;
-    const { title, description, techStack, techRoles, projectType, repoLink, status, rolesNeeded } = req.body;
+    const { title, description, techStack, projectType, repoLink, status, rolesNeeded } = req.body;
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
         throw new ApiError(400, "Invalid project id");
     }
@@ -67,10 +109,6 @@ const updateProject = AsyncHandler(async (req, res) => {
 
     if (techStack !== undefined && !isValidStringArray(techStack)) {
         throw new ApiError(400, "Tech stack must be a valid string array");
-    }
-
-    if (techRoles !== undefined && !isValidStringArray(techRoles)) {
-        throw new ApiError(400, "Tech roles must be a valid string array");
     }
 
     if (repoLink !== undefined && !isValidRepoLink(repoLink)) {
@@ -93,7 +131,6 @@ const updateProject = AsyncHandler(async (req, res) => {
         title === undefined &&
         description === undefined &&
         techStack === undefined &&
-        techRoles === undefined &&
         projectType === undefined &&
         repoLink === undefined &&
         status === undefined &&
@@ -117,7 +154,6 @@ const updateProject = AsyncHandler(async (req, res) => {
     if (title !== undefined) updateFields.title = title.trim();
     if (description !== undefined) updateFields.description = description.trim();
     if (techStack !== undefined) updateFields.techStack = techStack;
-    if (techRoles !== undefined) updateFields.techRoles = techRoles;
     if (projectType !== undefined) updateFields.projectType = projectType;
     if (repoLink !== undefined) updateFields.repoLink = repoLink;
     if (status !== undefined) updateFields.status = status;
@@ -138,21 +174,46 @@ const updateProject = AsyncHandler(async (req, res) => {
 })
 
 const deleteProject = AsyncHandler( async(req, res) => {
-    // 1. get project id from req,params
-    // 2. findOneAndUpdate with parameters- userid and projectId
-    // 3. return the response
     const { projectId } = req.params
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
         throw new ApiError(400, "Invalid project id");
     }
-    const deletedProject = await Project.findOneAndDelete({ _id: projectId, createdBy: req.user._id })         //checking authorization
-    if(!deletedProject){
-        throw new ApiError(404, "Project not found or unauthorized")
+
+    let deletedRequestsCount = 0;
+    const session = await mongoose.startSession();
+
+    try {
+        await session.withTransaction(async () => {
+            deletedRequestsCount = await deleteProjectAndRequests(
+                projectId,
+                req.user._id,
+                session
+            );
+        });
+    } catch (error) {
+        if (error instanceof ApiError || error.statusCode) {
+            throw error;
+        }
+
+        if (!isTransactionUnsupportedError(error)) {
+            throw error;
+        }
+
+        deletedRequestsCount = await deleteProjectAndRequests(
+            projectId,
+            req.user._id
+        );
+    } finally {
+        await session.endSession();
     }
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {}, "Project deleted successfully"))
+    .json(new ApiResponse(
+        200,
+        { deletedRequestsCount },
+        "Project deleted successfully"
+    ))
 })
 
 const getProjectById = AsyncHandler( async(req, res) => {

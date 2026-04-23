@@ -51,7 +51,7 @@ const createRequest = AsyncHandler(async (req, res) => {
 
     const populatedRequest = await Request.findById(request._id)
         .populate("requestedBy", "fullName userName email")
-        .populate("project", "title description techStack techRoles projectType status");
+        .populate("project", "title description techStack rolesNeeded projectType status");
 
     return res
         .status(201)
@@ -87,10 +87,24 @@ const getMySentRequests = AsyncHandler( async(req, res) => {
     const requests = await Request.find({ requestedBy: userId })
     .populate("project", "title description status")
     .sort({ createdAt: -1 })
+    .lean()
+
+    const orphanRequestIds = requests
+        .filter((request) => !request.project)
+        .map((request) => request._id);
+
+    if (orphanRequestIds.length > 0) {
+        await Request.deleteMany({
+            _id: { $in: orphanRequestIds },
+            requestedBy: userId
+        });
+    }
+
+    const liveRequests = requests.filter((request) => request.project);
 
     return res
     .status(200)
-    .json(new ApiResponse(200, requests, "Requests fetched successfully"))
+    .json(new ApiResponse(200, liveRequests, "Requests fetched successfully"))
 })
 
 const updateRequestStatus = AsyncHandler(async (req, res) => {
@@ -115,6 +129,10 @@ const updateRequestStatus = AsyncHandler(async (req, res) => {
     if (!request) {
         throw new ApiError(404, "Request not found");
     }
+    if (!request.project) {
+        await Request.findByIdAndDelete(requestId);
+        throw new ApiError(404, "Project for this request no longer exists");
+    }
     if (request.project.createdBy.toString() !== userId.toString()) {
         throw new ApiError(403, "You are not allowed to update this request");
     }
@@ -127,7 +145,7 @@ const updateRequestStatus = AsyncHandler(async (req, res) => {
 
     const updatedRequest = await Request.findById(request._id)
         .populate("requestedBy", "fullName userName email")
-        .populate("project", "title description techStack techRoles projectType status");
+        .populate("project", "title description techStack rolesNeeded projectType status");
 
     return res
         .status(200)

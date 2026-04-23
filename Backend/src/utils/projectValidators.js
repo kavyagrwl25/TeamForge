@@ -62,7 +62,7 @@ export const isValidProjectType = (type) => {
 }
 
 export const isValidRolesNeeded = (rolesNeeded) => {
-    if (!Array.isArray(rolesNeeded) || rolesNeeded.length === 0) {
+    if (!Array.isArray(rolesNeeded)) {
         return false
     }
 

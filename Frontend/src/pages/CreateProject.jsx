@@ -9,7 +9,7 @@ function CreateProject() {
     title: "",
     description: "",
     techStack: "",
-    techRoles: "",
+    rolesNeeded: "",
     projectType: "personal",
     repoLink: "",
   });
@@ -42,12 +42,12 @@ function CreateProject() {
     setLoading(true);
 
     const projectData = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
       techStack: splitToArray(formData.techStack),
-      techRoles: splitToArray(formData.techRoles),
+      rolesNeeded: splitToArray(formData.rolesNeeded),
       projectType: formData.projectType,
-      repoLink: formData.repoLink,
+      repoLink: formData.repoLink.trim(),
     };
 
     try {
@@ -57,7 +57,7 @@ function CreateProject() {
         title: "",
         description: "",
         techStack: "",
-        techRoles: "",
+        rolesNeeded: "",
         projectType: "personal",
         repoLink: "",
       });
@@ -123,9 +123,9 @@ function CreateProject() {
 
             <input
               type="text"
-              name="techRoles"
+              name="rolesNeeded"
               placeholder="Roles needed, separated by commas"
-              value={formData.techRoles}
+              value={formData.rolesNeeded}
               onChange={handleChange}
               className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />

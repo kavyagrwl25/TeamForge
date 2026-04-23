@@ -1,9 +1,88 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import {
   getRequestsForProject,
   updateRequestStatus,
 } from "../services/requestServices";
+
+function RequesterProfileModal({ request, requester, getInitials, onClose }) {
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="requester-profile-title"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 text-slate-100 shadow-2xl shadow-slate-950/70 ring-1 ring-cyan-300/10"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5 sm:p-6">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-cyan-300 text-xl font-bold text-slate-950 shadow-lg shadow-cyan-950/25">
+              {getInitials(requester)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium uppercase tracking-wide text-cyan-200/80">
+                Requester profile
+              </p>
+              <h2
+                id="requester-profile-title"
+                className="mt-1 truncate text-2xl font-bold text-white"
+              >
+                {requester.fullName || "Unknown user"}
+              </h2>
+              <p className="mt-1 truncate text-sm text-slate-400">
+                @{requester.userName || "unknown"}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-4 focus:ring-cyan-300/15"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-5 sm:p-6">
+          <div className="grid gap-4">
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">Email</p>
+              <p className="mt-1 break-words text-slate-100">
+                {requester.email || "No email available"}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">
+                Role Requested
+              </p>
+              <p className="mt-1 text-slate-100">
+                {request.roleRequested || "Not provided"}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">
+                Pitch Message
+              </p>
+              <p className="mt-1 whitespace-pre-wrap leading-7 text-slate-100">
+                {request.pitchMessage || "No pitch message provided."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>,
+    document.body
+  );
+}
 
 function ProjectRequests() {
   const { projectId } = useParams();
@@ -67,6 +146,36 @@ function ProjectRequests() {
   };
 
   const selectedRequester = selectedRequest?.requestedBy || {};
+
+  useEffect(() => {
+    if (!selectedRequest) {
+      return;
+    }
+
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setSelectedRequest(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedRequest]);
 
   return (
     <div className="min-h-screen px-4 py-8 text-slate-100">
@@ -180,63 +289,12 @@ function ProjectRequests() {
       </main>
 
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4">
-          <section className="w-full max-w-lg rounded-lg border border-white/10 bg-slate-900 p-6 text-slate-100 shadow-2xl shadow-slate-950/60">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sky-500 text-xl font-bold text-white">
-                  {getInitials(selectedRequester)}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-400">
-                    Requester profile
-                  </p>
-                  <h2 className="mt-1 text-2xl font-bold text-white">
-                    {selectedRequester.fullName || "Unknown user"}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    @{selectedRequester.userName || "unknown"}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedRequest(null)}
-                className="rounded-lg border border-white/10 px-3 py-1 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="mt-6 grid gap-4">
-              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-sm font-semibold text-slate-400">Email</p>
-                <p className="mt-1 text-slate-100">
-                  {selectedRequester.email || "No email available"}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-sm font-semibold text-slate-400">
-                  Role Requested
-                </p>
-                <p className="mt-1 text-slate-100">
-                  {selectedRequest.roleRequested || "Not provided"}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
-                <p className="text-sm font-semibold text-slate-400">
-                  Pitch Message
-                </p>
-                <p className="mt-1 text-slate-100">
-                  {selectedRequest.pitchMessage || "No pitch message provided."}
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
+        <RequesterProfileModal
+          request={selectedRequest}
+          requester={selectedRequester}
+          getInitials={getInitials}
+          onClose={() => setSelectedRequest(null)}
+        />
       )}
     </div>
   );

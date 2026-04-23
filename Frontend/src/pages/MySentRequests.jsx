@@ -17,7 +17,11 @@ function MySentRequests() {
       try {
         // API call for requests sent by the logged-in user: GET /api/v1/requests/me
         const response = await getMySentRequests();
-        setRequests(Array.isArray(response.data) ? response.data : []);
+        const liveRequests = Array.isArray(response.data)
+          ? response.data.filter((request) => request?.project)
+          : [];
+
+        setRequests(liveRequests);
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load your sent requests."
@@ -70,8 +74,18 @@ function MySentRequests() {
         {success && <p className="mb-4 text-green-600">{success}</p>}
 
         {!loading && !error && requests.length === 0 && (
-          <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
-            You have not sent any join requests yet.
+          <div className="rounded-xl border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
+            <h2 className="text-xl font-bold text-white">No active sent requests</h2>
+            <p className="mt-2 max-w-2xl text-slate-400">
+              You have not sent any join requests yet, or the projects you
+              requested to join are no longer available.
+            </p>
+            <Link
+              to="/projects/explore"
+              className="mt-5 inline-flex rounded-lg bg-sky-500 px-4 py-2 font-medium text-white transition hover:bg-sky-400"
+            >
+              Explore Projects
+            </Link>
           </div>
         )}
 
@@ -81,10 +95,10 @@ function MySentRequests() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">
-                    {request.project?.title || "Project unavailable"}
+                    {request.project.title || "Untitled project"}
                   </h2>
                   <p className="mt-2 text-slate-300">
-                    {request.project?.description || "No description available."}
+                    {request.project.description || "No description available."}
                   </p>
                 </div>
 
