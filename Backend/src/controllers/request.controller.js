@@ -59,6 +59,11 @@ const createRequest = AsyncHandler(async (req, res) => {
 });
 
 const getRequestsForMyProject = AsyncHandler(async (req, res) => {
+    // needs pagination
+
+    const page = parseInt(req.query.page) || 1 // query parameter
+    const limit = parseInt(req.query.limit) || 10 // query parameter
+    const skip = (page -1) * limit
     const { projectId } = req.params
     if (!projectId) {
         throw new ApiError(400, "Project id is required")
@@ -76,35 +81,65 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
     const requests = await Request.find({ project: projectId })
     .populate("requestedBy", "fullName userName email")
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    const totalRequests = await Request.countDocuments({ project: projectId });
 
     return res
         .status(200)
-        .json(new ApiResponse(200, requests, "Requests fetched successfully"))
+        .json(new ApiResponse(200, {
+                requests,
+                pagination: {
+                    page,
+                    limit,
+                    totalRequests,
+                    totalPages: Math.ceil(totalRequests / limit),
+                }
+            }, "Requests fetched successfully"))
 })
 
 const getMySentRequests = AsyncHandler( async(req, res) => {
+    // needs pagination
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
     const userId = req.user?._id
     const requests = await Request.find({ requestedBy: userId })
     .populate("project", "title description status")
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .lean()
 
+    
     const orphanRequestIds = requests
-        .filter((request) => !request.project)
-        .map((request) => request._id);
-
+    .filter((request) => !request.project)
+    .map((request) => request._id);
+    
     if (orphanRequestIds.length > 0) {
         await Request.deleteMany({
             _id: { $in: orphanRequestIds },
             requestedBy: userId
         });
     }
-
+    
     const liveRequests = requests.filter((request) => request.project);
-
+    const totalRequests = await Request.countDocuments({
+        requestedBy: userId,
+        project: { $ne: null },
+    });
+    
     return res
     .status(200)
-    .json(new ApiResponse(200, liveRequests, "Requests fetched successfully"))
+    .json(new ApiResponse(200, {
+        liveRequests,
+        pagination: {
+            page,
+            limit,
+            totalRequests,
+            totalPages: Math.ceil(totalRequests / limit),
+        }
+    }, "Requests fetched successfully"))
 })
 
 const updateRequestStatus = AsyncHandler(async (req, res) => {

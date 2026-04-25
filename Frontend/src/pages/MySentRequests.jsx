@@ -17,21 +17,21 @@ function MySentRequests() {
       try {
         // API call for requests sent by the logged-in user: GET /api/v1/requests/me
         const response = await getMySentRequests();
-        const liveRequests = Array.isArray(response.data)
-          ? response.data.filter((request) => request?.project)
+        const liveRequests = Array.isArray(response.data.data.liveRequests)    // Handle case where response.data might not be an array
+          ? response.data.data.liveRequests
           : [];
 
-        setRequests(liveRequests);
+        setRequests(liveRequests);        // Only set requests that have a valid project reference
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load your sent requests."
         );
       } finally {
-        setLoading(false);
+        setLoading(false);            // Ensure loading spinner is updated regardless of success or failure
       }
     };
 
-    fetchRequests();
+    fetchRequests();                
   }, []);
 
   const handleDelete = async (requestId) => {
@@ -41,7 +41,7 @@ function MySentRequests() {
 
     try {
       await deleteRequest(requestId);
-      setRequests((prev) => prev.filter((request) => request._id !== requestId));
+      setRequests((prev) => prev.filter((request) => request._id !== requestId)); // Optimistically update UI by removing the deleted request from the list
       setSuccess("Request deleted successfully.");
     } catch (err) {
       setError(
