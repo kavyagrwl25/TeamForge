@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import PaginationComponent from "../components/Pagination";
 import {
   deleteRequest,
   getMySentRequests,
@@ -7,6 +8,8 @@ import {
 
 function MySentRequests() {
   const [requests, setRequests] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState("");
   const [error, setError] = useState("");
@@ -14,25 +17,30 @@ function MySentRequests() {
 
   useEffect(() => {
     const fetchRequests = async () => {
+      setLoading(true);
+      setError("");
+
       try {
-        // API call for requests sent by the logged-in user: GET /api/v1/requests/me
-        const response = await getMySentRequests();
-        const liveRequests = Array.isArray(response.data.data.liveRequests)    // Handle case where response.data might not be an array
+        // API call for requests sent by the logged-in user:
+        // GET /api/v1/requests/me?page=${page}&limit=10
+        const response = await getMySentRequests(page);
+        const liveRequests = Array.isArray(response.data.data.liveRequests)
           ? response.data.data.liveRequests
           : [];
 
-        setRequests(liveRequests);        // Only set requests that have a valid project reference
+        setRequests(liveRequests);
+        setPagination(response.data.data.pagination || null);
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load your sent requests."
         );
       } finally {
-        setLoading(false);            // Ensure loading spinner is updated regardless of success or failure
+        setLoading(false);
       }
     };
 
-    fetchRequests();                
-  }, []);
+    fetchRequests();
+  }, [page]);
 
   const handleDelete = async (requestId) => {
     setError("");
@@ -41,7 +49,16 @@ function MySentRequests() {
 
     try {
       await deleteRequest(requestId);
-      setRequests((prev) => prev.filter((request) => request._id !== requestId)); // Optimistically update UI by removing the deleted request from the list
+      const isOnlyRequestOnPage = requests.length === 1;
+
+      if (isOnlyRequestOnPage && page > 1) {
+        setPage((prev) => prev - 1);
+      } else {
+        setRequests((prev) =>
+          prev.filter((request) => request._id !== requestId)
+        );
+      }
+
       setSuccess("Request deleted successfully.");
     } catch (err) {
       setError(
@@ -138,6 +155,12 @@ function MySentRequests() {
             </article>
           ))}
         </div>
+
+        <PaginationComponent
+          page={page}
+          totalPages={pagination?.totalPages || 1}
+          onPageChange={setPage}
+        />
       </main>
     </div>
   );

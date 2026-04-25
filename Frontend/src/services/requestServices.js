@@ -5,10 +5,21 @@ export const createJoinRequest = async (projectId, requestData) => {
   return response.data;
 };
 
-export const getMySentRequests = async () => {
-  // API call for My Requests: GET /api/v1/requests/me
-  const response = await API.get("/requests/me");
-  return response.data;
+export const getMySentRequests = async (page) => {
+  // API call for My Requests: GET /api/v1/requests/me?page=${page}&limit=10
+  const currentPage = page ?? 1;
+  const response = await API.get(`/requests/me?page=${currentPage}&limit=10`);
+
+  if (page === undefined) {
+    return {
+      ...response,
+      data: Array.isArray(response.data?.data?.liveRequests)
+        ? response.data.data.liveRequests
+        : [],
+    };
+  }
+
+  return response;
 };
 
 export const getRequestsForProject = async (projectId) => {

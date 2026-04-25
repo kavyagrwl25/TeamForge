@@ -55,7 +55,12 @@ const createProject = AsyncHandler(async (req, res) => {
     }
 
     if (description === undefined || !isValidProjectDescription(description)) {
-        throw new ApiError(400, "Invalid description")
+        throw new ApiError(
+            400,
+            description === undefined
+                ? "Project description is required"
+                : "Project description is too short"
+        )
     }
 
     if (techStack !== undefined && !isValidStringArray(techStack)) {
@@ -104,7 +109,12 @@ const updateProject = AsyncHandler(async (req, res) => {
     }
 
     if (description !== undefined && !isValidProjectDescription(description)) {
-        throw new ApiError(400, "Invalid description");
+        throw new ApiError(
+            400,
+            description === undefined
+                ? "Project description is required"
+                : "Project description is too short"
+        );
     }
 
     if (techStack !== undefined && !isValidStringArray(techStack)) {

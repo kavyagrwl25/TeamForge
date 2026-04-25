@@ -126,10 +126,10 @@ function App() {
 
   return (
     // Root background: one dark premium gradient now covers every route and future page.
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] text-slate-100">
       {/* Subtle radial glows add depth while keeping the dashboard calm and readable. */}
-      <div className="pointer-events-none absolute -left-32 top-24 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-20 right-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -left-32 top-24 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed bottom-20 right-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
       {isAuthenticated && (
         <Navbar currentUser={currentUser} onLogout={handleLogout} />
       )}
@@ -272,9 +272,7 @@ function App() {
           />
         </Routes>
       </main>
-      <div className="relative z-10">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

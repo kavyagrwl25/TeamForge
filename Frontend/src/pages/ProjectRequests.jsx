@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
-import {
-  getRequestsForProject,
-  updateRequestStatus,
-} from "../services/requestServices";
+import { API } from "../services/authServices";
+import { updateRequestStatus } from "../services/requestServices";
 
 function RequesterProfileModal({ request, requester, getInitials, onClose }) {
   return createPortal(
@@ -86,8 +84,11 @@ function RequesterProfileModal({ request, requester, getInitials, onClose }) {
 
 function ProjectRequests() {
   const { projectId } = useParams();
+  const limit = 5;
 
   const [requests, setRequests] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
@@ -96,10 +97,43 @@ function ProjectRequests() {
 
   useEffect(() => {
     const fetchRequests = async () => {
+      setError("");
+      setLoading(true);
+
+      if (!projectId) {
+        setRequests([]);
+        setError("Could not load project requests. Missing project id.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await getRequestsForProject(projectId);
-        setRequests(response.data);
+        console.log("projectId:", projectId);
+        const response = await API.get(`/requests/project/${projectId}`, {
+          params: {
+            page: currentPage,
+            limit,
+          },
+        });
+        console.log("Project requests API response:", response);
+        console.log("Project requests response.data:", response.data);
+
+        const payload = response.data?.data;
+        const requestsArray = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.requests)
+            ? payload.requests
+            : [];
+
+        setRequests(requestsArray);
+        setTotalPages(
+          Number.isInteger(payload?.totalPages) && payload.totalPages > 0
+            ? payload.totalPages
+            : 1
+        );
       } catch (err) {
+        setRequests([]);
+        setTotalPages(1);
         setError(
           err.response?.data?.message || "Could not load project requests."
         );
@@ -109,7 +143,7 @@ function ProjectRequests() {
     };
 
     fetchRequests();
-  }, [projectId]);
+  }, [projectId, currentPage, limit]);
 
   const handleStatusUpdate = async (requestId, status) => {
     setError("");
@@ -120,9 +154,11 @@ function ProjectRequests() {
       const response = await updateRequestStatus(requestId, { status });
 
       setRequests((prev) =>
-        prev.map((request) =>
-          request._id === requestId ? response.data : request
-        )
+        Array.isArray(prev)
+          ? prev.map((request) =>
+              request._id === requestId ? response.data : request
+            )
+          : []
       );
       setSuccess(`Request ${status} successfully.`);
     } catch (err) {
@@ -145,7 +181,20 @@ function ProjectRequests() {
     return words[0]?.slice(0, 2).toUpperCase() || "U";
   };
 
+  const getStatusBadgeClass = (status) => {
+    if (status === "accepted") {
+      return "bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-sm";
+    }
+
+    if (status === "rejected") {
+      return "bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-sm";
+    }
+
+    return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded-full text-sm";
+  };
+
   const selectedRequester = selectedRequest?.requestedBy || {};
+  const safeRequests = Array.isArray(requests) ? requests : [];
 
   useEffect(() => {
     if (!selectedRequest) {
@@ -198,14 +247,15 @@ function ProjectRequests() {
         {error && <p className="mb-4 text-red-500">{error}</p>}
         {success && <p className="mb-4 text-green-600">{success}</p>}
 
-        {!loading && !error && requests.length === 0 && (
+        {!loading && !error && safeRequests.length === 0 && (
           <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">
-            No join requests for this project yet.
+            No join requests yet. When collaborators apply to this project,
+            their requests will appear here.
           </div>
         )}
 
         <div className="grid gap-4">
-          {requests.map((request) => (
+          {safeRequests.map((request) => (
             <article
               key={request._id}
               className="rounded-lg border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-slate-950/30"
@@ -231,7 +281,7 @@ function ProjectRequests() {
                   </div>
                 </div>
 
-                <span className="w-fit rounded-full bg-slate-800 px-3 py-1 text-sm font-medium capitalize text-slate-300">
+                <span className={`${getStatusBadgeClass(request.status)} w-fit font-medium capitalize`}>
                   {request.status}
                 </span>
               </div>
@@ -285,6 +335,32 @@ function ProjectRequests() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm font-medium text-slate-300">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </main>
 

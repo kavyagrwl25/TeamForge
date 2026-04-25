@@ -59,11 +59,9 @@ const createRequest = AsyncHandler(async (req, res) => {
 });
 
 const getRequestsForMyProject = AsyncHandler(async (req, res) => {
-    // needs pagination
-
-    const page = parseInt(req.query.page) || 1 // query parameter
-    const limit = parseInt(req.query.limit) || 10 // query parameter
-    const skip = (page -1) * limit
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 5
+    const skip = (page - 1) * limit
     const { projectId } = req.params
     if (!projectId) {
         throw new ApiError(400, "Project id is required")
@@ -80,22 +78,22 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
     }
     const requests = await Request.find({ project: projectId })
     .populate("requestedBy", "fullName userName email")
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(limit)
+
     const totalRequests = await Request.countDocuments({ project: projectId });
+    const totalPages = Math.ceil(totalRequests / limit);
 
     return res
         .status(200)
         .json(new ApiResponse(200, {
-                requests,
-                pagination: {
-                    page,
-                    limit,
-                    totalRequests,
-                    totalPages: Math.ceil(totalRequests / limit),
-                }
-            }, "Requests fetched successfully"))
+            requests,
+            page,
+            limit,
+            totalRequests,
+            totalPages,
+        }, "Requests fetched successfully"))
 })
 
 const getMySentRequests = AsyncHandler( async(req, res) => {

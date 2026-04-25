@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import { getMyProjects } from "../services/projectServices";
 
 function MyProjects() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,12 +74,13 @@ function MyProjects() {
                   >
                     Edit
                   </Link>
-                  <Link
-                    to={`/projects/${project._id}/requests`}
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/projects/${project._id}/requests`)}
                     className="inline-block rounded-lg bg-sky-500 px-4 py-2 font-medium text-white transition hover:bg-sky-400"
                   >
                     View Requests
-                  </Link>
+                  </button>
                 </div>
               }
             />

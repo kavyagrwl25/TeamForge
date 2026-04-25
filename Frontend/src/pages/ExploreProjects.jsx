@@ -11,6 +11,7 @@ function ExploreProjects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const safeSentRequests = Array.isArray(sentRequests) ? sentRequests : [];
 
   useEffect(() => {
     const fetchExploreData = async () => {
@@ -41,16 +42,11 @@ function ExploreProjects() {
     fetchExploreData();
   }, []);
 
-  const getProjectId = (project) => {
-    return typeof project === "string" ? project : project?._id;
-  };
-
   const getExistingRequestForProject = (projectId) => {
-    // Projects and sent requests are matched by comparing the explore project
-    // _id with each sent request's populated project._id.
-    return sentRequests.find((request) => {
-      return getProjectId(request.project) === projectId;
-    });
+    return safeSentRequests.find(
+      (request) =>
+        request.project?._id === projectId && request.status === "pending"
+    );
   };
 
   const getRequestStatusLabel = (status) => {
