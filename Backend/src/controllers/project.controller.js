@@ -251,17 +251,36 @@ const getMyProjects = AsyncHandler( async(req, res) => {
     // 1. get the createdBy from req.user._id
     // 2. find all the projects with that createdBy in db
     // 3. return the response
+    
+    // needs pagination
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
     const userId = req.user._id
     if(!userId){
         throw new ApiError(400, "Invalid user id")
     }
     const allProjects = await Project.find( {createdBy: userId} ).populate("createdBy",
         "fullName userName email"
-    ).sort({ createdAt: -1 }).lean()
-    
+    ).sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean()
+    const totalProjects = await Project.countDocuments({ createdBy: userId });
+    const totalPages = Math.ceil(totalProjects / limit);
+
     return res
     .status(200)
-    .json(new ApiResponse(200, allProjects, "Projects fetched successfully"))
+    .json(new ApiResponse(200, {
+        allProjects,
+        pagination: {
+            page,
+            limit,
+            totalProjects,
+            totalPages,
+        }
+    }
+    , "Projects fetched successfully"))
 })
 
 const getExploreProjects = AsyncHandler( async(req, res) => {
@@ -269,6 +288,11 @@ const getExploreProjects = AsyncHandler( async(req, res) => {
     // 2. get userId from req.user
     // 3. get all the projects rather than the current user projects
     // 4. return the response
+
+    // needs pagination
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
     const userId = req.user._id
     if(!userId){
         throw new ApiError(400, "User id is invalid")
@@ -278,11 +302,26 @@ const getExploreProjects = AsyncHandler( async(req, res) => {
         status: "open"
     })
     .populate("createdBy", "fullName userName email").sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .lean()
+    const totalProjects = await Project.countDocuments({
+        createdBy: { $ne: userId },
+        status: "open"
+    });
+    const totalPages = Math.ceil(totalProjects / limit);
 
     return res
     .status(200)
-    .json(new ApiResponse(200, projects, "Projects fetched successfully"))
+    .json(new ApiResponse(200, {
+        projects,
+        pagination: {
+            page,
+            limit,
+            totalProjects,
+            totalPages,
+        }
+    }, "Projects fetched successfully"))
 })
 
 export { createProject, updateProject, deleteProject, getProjectById, getMyProjects, getExploreProjects }

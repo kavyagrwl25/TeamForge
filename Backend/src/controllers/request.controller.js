@@ -89,10 +89,12 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, {
             requests,
-            page,
-            limit,
-            totalRequests,
-            totalPages,
+            pagination: {
+                page,
+                limit,
+                totalRequests,
+                totalPages,
+            }
         }, "Requests fetched successfully"))
 })
 

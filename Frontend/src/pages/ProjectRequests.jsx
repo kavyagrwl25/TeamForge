@@ -120,16 +120,15 @@ function ProjectRequests() {
         console.log("Project requests response.data:", response.data);
 
         const payload = response.data?.data;
-        const requestsArray = Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.requests)
-            ? payload.requests
-            : [];
+        const requestsArray = Array.isArray(payload?.requests)
+          ? payload.requests
+          : [];
+        const pagination = payload?.pagination || null;
 
         setRequests(requestsArray);
         setTotalPages(
-          Number.isInteger(payload?.totalPages) && payload.totalPages > 0
-            ? payload.totalPages
+          Number.isInteger(pagination?.totalPages) && pagination.totalPages > 0
+            ? pagination.totalPages
             : 1
         );
       } catch (err) {
