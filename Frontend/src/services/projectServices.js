@@ -5,15 +5,28 @@ export const createProject = async (projectData) => {
   return response.data;
 };
 
-export const getMyProjects = async () => {
+export const getMyProjects = async ({
+  page = 1,
+  limit = 5,
+  search = "",
+} = {}) => {
   // API call for My Projects: GET /api/v1/projects/me
-  const response = await API.get("/projects/me");
+  const response = await API.get("/projects/me", {
+    params: { page, limit, search },
+  });
   return response.data;
 };
 
-export const getExploreProjects = async () => {
+export const getExploreProjects = async ({
+  page = 1,
+  limit = 5,
+  search = "",
+  status = "",
+} = {}) => {
   // API call for Explore Projects: GET /api/v1/projects
-  const response = await API.get("/projects");
+  const response = await API.get("/projects", {
+    params: { page, limit, search, status },
+  });
   return response.data;
 };
 

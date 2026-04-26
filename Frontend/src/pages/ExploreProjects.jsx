@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import JoinRequestModal from "../components/JoinRequestModal";
+import PaginationComponent from "../components/Pagination";
 import ProjectCard from "../components/ProjectCard";
 import { getExploreProjects } from "../services/projectServices";
 import { getMySentRequests } from "../services/requestServices";
@@ -40,21 +41,43 @@ const buildStatusByProjectId = (requests) => {
 };
 
 function ExploreProjects() {
+  const limit = 5;
   const [projects, setProjects] = useState([]);
   const [statusByProjectId, setStatusByProjectId] = useState({});
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const projectListTopRef = useRef(null);
+  const shouldScrollOnPageChangeRef = useRef(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setPage(1);
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchExploreData = async () => {
+      setLoading(true);
       setError("");
 
       try {
         const [projectsResponse, firstRequestsResponse] = await Promise.all([
-          getExploreProjects(),
+          getExploreProjects({
+            page,
+            limit,
+            search: debouncedSearchTerm,
+          }),
           getMySentRequests(1),
         ]);
+        const projectsPayload = projectsResponse?.data;
         const firstRequestsPage = normalizeRequestsPayload(firstRequestsResponse);
         let allRequests = firstRequestsPage.requests;
 
@@ -74,10 +97,18 @@ function ExploreProjects() {
         }
 
         setProjects(
-          Array.isArray(projectsResponse.data) ? projectsResponse.data : []
+          Array.isArray(projectsPayload?.projects) ? projectsPayload.projects : []
+        );
+        setTotalPages(
+          Number.isInteger(projectsPayload?.pagination?.totalPages) &&
+            projectsPayload.pagination.totalPages > 0
+            ? projectsPayload.pagination.totalPages
+            : 1
         );
         setStatusByProjectId(buildStatusByProjectId(allRequests));
       } catch (err) {
+        setProjects([]);
+        setTotalPages(1);
         setError(
           err.response?.data?.message || "Could not load projects to explore."
         );
@@ -87,7 +118,7 @@ function ExploreProjects() {
     };
 
     fetchExploreData();
-  }, []);
+  }, [page, limit, debouncedSearchTerm]);
 
   const getRequestStatusLabel = (status) => {
     // Status is derived from the matching sent request returned by
@@ -135,6 +166,27 @@ function ExploreProjects() {
     setSelectedProject(null);
   };
 
+  const handlePageChange = (nextPage) => {
+    if (nextPage === page) {
+      return;
+    }
+
+    shouldScrollOnPageChangeRef.current = true;
+    setPage(nextPage);
+  };
+
+  useEffect(() => {
+    if (!shouldScrollOnPageChangeRef.current) {
+      return;
+    }
+
+    projectListTopRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    shouldScrollOnPageChangeRef.current = false;
+  }, [page]);
+
   return (
     <div className="min-h-screen px-4 py-10 text-slate-100 md:py-12">
       {/* Page wrapper stays transparent so the root dark gradient remains consistent on every route. */}
@@ -155,12 +207,21 @@ function ExploreProjects() {
               </p>
             </div>
 
-            <Link
-              to="/projects/create"
-              className="w-fit rounded-lg bg-sky-500 px-5 py-3 text-center font-medium text-white shadow-sm transition hover:bg-sky-400"
-            >
-              Create Project
-            </Link>
+            <div className="flex flex-col gap-3 sm:items-end">
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search projects by title or stack"
+                className="w-full min-w-[260px] rounded-lg border border-white/10 bg-slate-900/70 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 sm:w-80"
+              />
+              <Link
+                to="/projects/create"
+                className="w-fit rounded-lg bg-sky-500 px-5 py-3 text-center font-medium text-white shadow-sm transition hover:bg-sky-400"
+              >
+                Create Project
+              </Link>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -190,6 +251,8 @@ function ExploreProjects() {
             </div>
           </div>
         </section>
+
+        <div ref={projectListTopRef} />
 
         {loading && (
           <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30 backdrop-blur">
@@ -227,11 +290,12 @@ function ExploreProjects() {
               </svg>
             </div>
             <h2 className="mt-5 text-2xl font-bold text-white">
-              No open projects yet
+              {debouncedSearchTerm ? "No projects found" : "No open projects yet"}
             </h2>
             <p className="mt-3 max-w-md text-slate-300">
-              Start by creating a project or check back later for new
-              collaborations.
+              {debouncedSearchTerm
+                ? "Try a different keyword to find matching projects."
+                : "Start by creating a project or check back later for new collaborations."}
             </p>
             <Link
               to="/projects/create"
@@ -281,6 +345,12 @@ function ExploreProjects() {
             );
           })}
         </div>
+
+        <PaginationComponent
+          page={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </main>
 
       {selectedProject && (

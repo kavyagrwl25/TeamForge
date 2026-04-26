@@ -253,20 +253,34 @@ const getMyProjects = AsyncHandler( async(req, res) => {
     // 3. return the response
     
     // needs pagination
+    // needs searching
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
+    const search = req.query.search?.trim() || ""
+    const escapeRegex = (text) =>
+        text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")       // escape special characters for regex
+    const safeSearch = escapeRegex(search)
     const userId = req.user._id
     if(!userId){
         throw new ApiError(400, "Invalid user id")
     }
-    const allProjects = await Project.find( {createdBy: userId} ).populate("createdBy",
+    const query = { createdBy: userId }
+    if(safeSearch !== ""){
+        query.$or = [
+            { title: { $regex: safeSearch, $options: "i" } },
+            { description: { $regex: safeSearch, $options: "i" } },
+            { techStack: { $elemMatch: { $regex: safeSearch, $options: "i" } } },           // search in tech stack array
+            { rolesNeeded: { $elemMatch: { $regex: safeSearch, $options: "i" } } },         // search in roles needed array
+        ]
+    }
+    const allProjects = await Project.find(query).populate("createdBy",
         "fullName userName email"
     ).sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean()
-    const totalProjects = await Project.countDocuments({ createdBy: userId });
+    const totalProjects = await Project.countDocuments(query);
     const totalPages = Math.ceil(totalProjects / limit);
 
     return res
@@ -290,25 +304,38 @@ const getExploreProjects = AsyncHandler( async(req, res) => {
     // 4. return the response
 
     // needs pagination
+    // needs searching
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
+    const search = req.query.search?.trim() || ""
+    const status = req.query.status?.trim() || "open"       // by default show open projects only
+    const escapeRegex = (text) =>
+        text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")       // escape special characters for regex
+    const safeSearch = escapeRegex(search)
     const userId = req.user._id
     if(!userId){
         throw new ApiError(400, "User id is invalid")
     }
-    const projects = await Project.find({
+    const query = {
         createdBy: { $ne: userId },
-        status: "open"
-    })
+        status: status
+    }
+    if (search !== "") {
+        query.$or = [
+            { title: { $regex: safeSearch, $options: "i" } },
+            { description: { $regex: safeSearch, $options: "i" } },
+            { techStack: { $elemMatch: { $regex: safeSearch, $options: "i" } } },           // search in tech stack array
+            { rolesNeeded: { $elemMatch: { $regex: safeSearch, $options: "i" } } },         // search in roles needed array
+        ];
+    }
+    const projects = await Project.find(query)
     .populate("createdBy", "fullName userName email").sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean()
-    const totalProjects = await Project.countDocuments({
-        createdBy: { $ne: userId },
-        status: "open"
-    });
+    
+    const totalProjects = await Project.countDocuments(query);
     const totalPages = Math.ceil(totalProjects / limit);
 
     return res
