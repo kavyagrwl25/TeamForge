@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
 const AUTH_SESSION_HINT_KEY = "teamforge_has_session";
 let refreshRequest = null;
 let authFailureHandler = null;
@@ -65,6 +66,8 @@ API.interceptors.response.use(
     // Interceptor flow: a protected request received 401, so the access token
     // cookie may be expired. Mark this request as retried to prevent loops.
     originalRequest._retry = true;
+    originalRequest.withCredentials = true;
+    originalRequest.baseURL = originalRequest.baseURL || API_BASE_URL;
 
     try {
       // Refresh retry: keep one shared refresh call so multiple expired
@@ -138,7 +141,11 @@ export const getCurrentUser = async (config = {}) => {
 };
 
 export const refreshTokens = async () => {
-  const response = await refreshAPI.post("/users/refresh-tokens");
+  const response = await refreshAPI.post(
+    "/users/refresh-tokens",
+    {},
+    { withCredentials: true }
+  );
   return response.data;
 };
 

@@ -5,31 +5,78 @@ import ProjectCard from "../components/ProjectCard";
 import { getExploreProjects } from "../services/projectServices";
 import { getMySentRequests } from "../services/requestServices";
 
+const normalizeRequestsPayload = (response) => {
+  const payload = response?.data?.data;
+  const requests = Array.isArray(payload?.liveRequests)
+    ? payload.liveRequests
+    : Array.isArray(payload?.requests)
+      ? payload.requests
+      : [];
+
+  return {
+    requests,
+    totalPages:
+      Number.isInteger(payload?.pagination?.totalPages) &&
+      payload.pagination.totalPages > 0
+        ? payload.pagination.totalPages
+        : 1,
+  };
+};
+
+const buildStatusByProjectId = (requests) => {
+  const statusByProjectId = {};
+
+  requests.forEach((request) => {
+    const projectId = request?.project?._id || request?.project;
+
+    if (!projectId || !request?.status) {
+      return;
+    }
+
+    statusByProjectId[String(projectId)] = request.status;
+  });
+
+  return statusByProjectId;
+};
+
 function ExploreProjects() {
   const [projects, setProjects] = useState([]);
-  const [sentRequests, setSentRequests] = useState([]);
+  const [statusByProjectId, setStatusByProjectId] = useState({});
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const safeSentRequests = Array.isArray(sentRequests) ? sentRequests : [];
 
   useEffect(() => {
     const fetchExploreData = async () => {
+      setError("");
+
       try {
-        // API calls for Explore Projects:
-        // GET /api/v1/projects fetches projects, and GET /api/v1/requests/me
-        // fetches requests already sent by the current user.
-        const [projectsResponse, requestsResponse] = await Promise.all([
+        const [projectsResponse, firstRequestsResponse] = await Promise.all([
           getExploreProjects(),
-          getMySentRequests(),
+          getMySentRequests(1),
         ]);
+        const firstRequestsPage = normalizeRequestsPayload(firstRequestsResponse);
+        let allRequests = firstRequestsPage.requests;
+
+        if (firstRequestsPage.totalPages > 1) {
+          const remainingPageResponses = await Promise.all(
+            Array.from(
+              { length: firstRequestsPage.totalPages - 1 },
+              (_, index) => getMySentRequests(index + 2)
+            )
+          );
+
+          const remainingRequests = remainingPageResponses.flatMap((response) =>
+            normalizeRequestsPayload(response).requests
+          );
+
+          allRequests = [...allRequests, ...remainingRequests];
+        }
 
         setProjects(
           Array.isArray(projectsResponse.data) ? projectsResponse.data : []
         );
-        setSentRequests(
-          Array.isArray(requestsResponse.data) ? requestsResponse.data : []
-        );
+        setStatusByProjectId(buildStatusByProjectId(allRequests));
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load projects to explore."
@@ -42,19 +89,12 @@ function ExploreProjects() {
     fetchExploreData();
   }, []);
 
-  const getExistingRequestForProject = (projectId) => {
-    return safeSentRequests.find(
-      (request) =>
-        request.project?._id === projectId && request.status === "pending"
-    );
-  };
-
   const getRequestStatusLabel = (status) => {
     // Status is derived from the matching sent request returned by
     // GET /api/v1/requests/me.
     if (status === "accepted") return "Accepted";
     if (status === "rejected") return "Rejected";
-    return "Request Pending";
+    return "Pending";
   };
 
   const getRequestStatusClass = (status) => {
@@ -69,8 +109,29 @@ function ExploreProjects() {
     return "cursor-not-allowed rounded-lg bg-amber-500/15 px-4 py-2 font-medium text-amber-300";
   };
 
+  const handleOpenRequestModal = (project) => {
+    const projectId = String(project?._id || "");
+
+    if (statusByProjectId[projectId]) {
+      setError("You have already sent request to this project.");
+      return;
+    }
+
+    setError("");
+    setSelectedProject(project);
+  };
+
   const handleRequestCreated = (request) => {
-    setSentRequests((prev) => [request, ...prev]);
+    const projectId =
+      request?.project?._id || request?.project || selectedProject?._id;
+
+    if (projectId) {
+      setStatusByProjectId((prev) => ({
+        ...prev,
+        [String(projectId)]: "pending",
+      }));
+    }
+
     setSelectedProject(null);
   };
 
@@ -183,22 +244,22 @@ function ExploreProjects() {
 
         <div className="grid gap-4">
           {projects.map((project, index) => {
-            const existingRequest = getExistingRequestForProject(project?._id);
-            const requestStatus = existingRequest?.status;
+            const projectId = String(project?._id || "");
+            const existingStatus = statusByProjectId[projectId];
 
             return (
               <ProjectCard
                 key={project?._id || index}
                 project={project}
                 action={
-                  existingRequest ? (
+                  existingStatus ? (
                     <div className="space-y-2">
                       <button
                         type="button"
                         disabled
-                        className={getRequestStatusClass(requestStatus)}
+                        className={getRequestStatusClass(existingStatus)}
                       >
-                        {getRequestStatusLabel(requestStatus)}
+                        {getRequestStatusLabel(existingStatus)}
                       </button>
                       <p className="text-sm text-slate-400">
                         You have already sent a request for this project.
@@ -209,7 +270,7 @@ function ExploreProjects() {
                     // has a matching sent request. Otherwise the modal still opens.
                     <button
                       type="button"
-                      onClick={() => setSelectedProject(project)}
+                      onClick={() => handleOpenRequestModal(project)}
                       className="rounded-lg bg-sky-500 px-4 py-2 font-medium text-white transition hover:bg-sky-400"
                     >
                       Request to Join
@@ -227,6 +288,9 @@ function ExploreProjects() {
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
           onRequestCreated={handleRequestCreated}
+          existingRequestStatus={
+            statusByProjectId[String(selectedProject?._id || "")]
+          }
         />
       )}
     </div>

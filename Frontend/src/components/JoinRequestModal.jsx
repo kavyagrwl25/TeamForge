@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { createJoinRequest } from "../services/requestServices";
 
-function JoinRequestModal({ project, onClose, onRequestCreated }) {
+function JoinRequestModal({
+  project,
+  onClose,
+  onRequestCreated,
+  existingRequestStatus,
+}) {
   const [formData, setFormData] = useState({
     roleRequested: "",
     pitchMessage: "",
@@ -25,6 +30,11 @@ function JoinRequestModal({ project, onClose, onRequestCreated }) {
 
     setError("");
     setSuccess("");
+
+    if (existingRequestStatus) {
+      setError("You have already sent request to this project.");
+      return;
+    }
 
     if (!formData.roleRequested.trim()) {
       setError("Please enter the role you want to request.");

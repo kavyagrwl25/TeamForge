@@ -11,11 +11,15 @@ export const getMySentRequests = async (page) => {
   const response = await API.get(`/requests/me?page=${currentPage}&limit=10`);
 
   if (page === undefined) {
+    const requestList = Array.isArray(response.data?.data?.liveRequests)
+      ? response.data.data.liveRequests
+      : Array.isArray(response.data?.data?.requests)
+        ? response.data.data.requests
+        : [];
+
     return {
       ...response,
-      data: Array.isArray(response.data?.data?.liveRequests)
-        ? response.data.data.liveRequests
-        : [],
+      data: requestList,
     };
   }
 

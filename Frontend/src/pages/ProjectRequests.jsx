@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
+import PaginationComponent from "../components/Pagination";
 import { API } from "../services/authServices";
 import { updateRequestStatus } from "../services/requestServices";
 
@@ -337,31 +338,11 @@ function ProjectRequests() {
           ))}
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Previous
-          </button>
-
-          <span className="text-sm font-medium text-slate-300">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        <PaginationComponent
+          page={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </main>
 
       {selectedRequest && (
