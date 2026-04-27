@@ -1,9 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit"
 
 import userRoutes from "./routes/user.routes.js";
 import projectRoutes from "./routes/project.routes.js";
@@ -11,6 +9,38 @@ import requestRoutes from "./routes/request.routes.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res.status(429).json({
+      success: false,
+      message: "Too many requests, please try again later",
+      errors: [],
+      data: null,
+    });
+  },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // stricter for login/register
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res.status(429).json({
+      success: false,
+      message: "Too many authentication attempts, please try again later",
+      errors: [],
+      data: null,
+    });
+  },
+})
+app.use(globalLimiter);
 // middlewares
 app.use(
   cors({
@@ -31,6 +61,11 @@ app.get("/", (req, res) => {
     message: "API is running",
   });
 });
+
+// apply auth rate limiter to sensitive routes
+app.use("/api/v1/users/login", authLimiter);
+app.use("/api/v1/users/register", authLimiter);
+app.use("/api/v1/users/refresh-tokens", authLimiter);
 
 // api routes
 app.use("/api/v1/users", userRoutes);
