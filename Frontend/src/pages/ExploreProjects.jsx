@@ -5,6 +5,7 @@ import PaginationComponent from "../components/Pagination";
 import ProjectCard from "../components/ProjectCard";
 import { getExploreProjects } from "../services/projectServices";
 import { getMySentRequests } from "../services/requestServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 const normalizeRequestsPayload = (response) => {
   const payload = response?.data?.data;
@@ -109,9 +110,7 @@ function ExploreProjects() {
       } catch (err) {
         setProjects([]);
         setTotalPages(1);
-        setError(
-          err.response?.data?.message || "Could not load projects to explore."
-        );
+        setError(getApiErrorMessage(err, "Could not load projects to explore."));
       } finally {
         setLoading(false);
       }

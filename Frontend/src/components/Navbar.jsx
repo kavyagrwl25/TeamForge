@@ -42,8 +42,7 @@ function Navbar({ currentUser, onLogout }) {
       await logoutUser();
       onLogout();
       navigate("/login", { replace: true });
-    } catch (err) {
-      console.error(err);
+    } catch {
     } finally {
       setLoading(false);
       setProfileMenuOpen(false);

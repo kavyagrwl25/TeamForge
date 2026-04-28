@@ -5,6 +5,7 @@ import {
   deleteRequest,
   getMySentRequests,
 } from "../services/requestServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function MySentRequests() {
   const [requests, setRequests] = useState([]);
@@ -32,7 +33,7 @@ function MySentRequests() {
         setPagination(response.data.data.pagination || null);
       } catch (err) {
         setError(
-          err.response?.data?.message || "Could not load your sent requests."
+          getApiErrorMessage(err, "Could not load your sent requests.")
         );
       } finally {
         setLoading(false);
@@ -62,7 +63,7 @@ function MySentRequests() {
       setSuccess("Request deleted successfully.");
     } catch (err) {
       setError(
-        err.response?.data?.message || "Could not delete request. Please try again."
+        getApiErrorMessage(err, "Could not delete request. Please try again.")
       );
     } finally {
       setDeletingId("");

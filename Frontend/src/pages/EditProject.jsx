@@ -5,6 +5,7 @@ import {
   getProjectById,
   updateProject,
 } from "../services/projectServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 const projectTypes = ["personal", "startup", "hackathon", "open-source"];
 const projectStatuses = ["open", "closed"];
@@ -85,9 +86,7 @@ function EditProject() {
           status: project.status || "open",
         });
       } catch (err) {
-        setLoadError(
-          err.response?.data?.message || "Could not load project details."
-        );
+        setLoadError(getApiErrorMessage(err, "Could not load project details."));
       } finally {
         setPageLoading(false);
       }
@@ -147,7 +146,7 @@ function EditProject() {
       }, 800);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Project update failed. Please try again."
+        getApiErrorMessage(err, "Project update failed. Please try again.")
       );
     } finally {
       setSaving(false);
@@ -177,7 +176,7 @@ function EditProject() {
       }, 700);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Project deletion failed. Please try again."
+        getApiErrorMessage(err, "Project deletion failed. Please try again.")
       );
     } finally {
       setDeleting(false);

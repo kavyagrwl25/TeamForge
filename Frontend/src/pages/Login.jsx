@@ -1,6 +1,7 @@
 import { createElement, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
+import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
 
 const featureChips = [
   "Discover projects",
@@ -276,9 +277,7 @@ function Login({ onLoginSuccess }) {
       // Redirect after login to the main Explore Projects screen.
       navigate("/projects/explore", { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      setError(getLoginErrorMessage(err, "Login failed. Please try again."));
     } finally {
       setLoading(false);
     }

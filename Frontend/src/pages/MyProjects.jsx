@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import PaginationComponent from "../components/Pagination";
 import ProjectCard from "../components/ProjectCard";
 import { getMyProjects } from "../services/projectServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function MyProjects() {
   const limit = 5;
@@ -48,9 +49,7 @@ function MyProjects() {
       } catch (err) {
         setProjects([]);
         setTotalPages(1);
-        setError(
-          err.response?.data?.message || "Could not load your projects."
-        );
+        setError(getApiErrorMessage(err, "Could not load your projects."));
       } finally {
         setLoading(false);
       }

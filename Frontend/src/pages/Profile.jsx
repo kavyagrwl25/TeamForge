@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCurrentUser } from "../services/authServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 import { getProfileImage, getUserInitials } from "../utils/profileHelpers";
 
 function Profile({ currentUser }) {
@@ -22,7 +23,7 @@ function Profile({ currentUser }) {
         const response = await getCurrentUser();
         setFetchedUser(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load profile.");
+        setError(getApiErrorMessage(err, "Could not load profile."));
       } finally {
         setFetching(false);
       }

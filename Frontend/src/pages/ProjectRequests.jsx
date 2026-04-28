@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import PaginationComponent from "../components/Pagination";
 import { API } from "../services/authServices";
 import { updateRequestStatus } from "../services/requestServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function RequesterProfileModal({ request, requester, getInitials, onClose }) {
   return createPortal(
@@ -134,9 +135,7 @@ function ProjectRequests() {
       } catch (err) {
         setRequests([]);
         setTotalPages(1);
-        setError(
-          err.response?.data?.message || "Could not load project requests."
-        );
+        setError(getApiErrorMessage(err, "Could not load project requests."));
       } finally {
         setLoading(false);
       }
@@ -162,9 +161,7 @@ function ProjectRequests() {
       );
       setSuccess(`Request ${status} successfully.`);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Could not update request status."
-      );
+      setError(getApiErrorMessage(err, "Could not update request status."));
     } finally {
       setUpdatingId("");
     }

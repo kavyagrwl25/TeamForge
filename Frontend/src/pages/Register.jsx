@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function Register() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ function Register() {
       }, 800);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Registration failed. Please try again."
+        getApiErrorMessage(err, "Registration failed. Please try again.")
       );
     } finally {
       setLoading(false);

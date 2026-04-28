@@ -6,6 +6,7 @@ import {
   getCurrentUser,
   updateProfile,
 } from "../services/authServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function Settings({ onAccountDeleted, onProfileUpdated }) {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
           linkedin: user.socialLinks?.linkedin || "",
         });
       } catch (err) {
-        setProfileError(err.response?.data?.message || "Could not load profile.");
+        setProfileError(getApiErrorMessage(err, "Could not load profile."));
       } finally {
         setPageLoading(false);
       }
@@ -156,9 +157,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
       onProfileUpdated?.(user);
       setProfileSuccess("Profile updated successfully.");
     } catch (err) {
-      setProfileError(
-        err.response?.data?.message || err.message || "Profile update failed."
-      );
+      setProfileError(getApiErrorMessage(err, "Profile update failed."));
     } finally {
       setProfileLoading(false);
     }
@@ -183,9 +182,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
       });
       setPasswordSuccess("Password changed successfully.");
     } catch (err) {
-      setPasswordError(
-        err.response?.data?.message || "Password change failed."
-      );
+      setPasswordError(getApiErrorMessage(err, "Password change failed."));
     } finally {
       setPasswordLoading(false);
     }
@@ -202,9 +199,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
       onAccountDeleted();
       navigate("/login", { replace: true });
     } catch (err) {
-      setDeleteError(
-        err.response?.data?.message || "Account deletion failed."
-      );
+      setDeleteError(getApiErrorMessage(err, "Account deletion failed."));
     } finally {
       setDeleteLoading(false);
     }

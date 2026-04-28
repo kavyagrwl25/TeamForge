@@ -27,7 +27,9 @@ import {
   hasAuthSessionHint,
   markAuthSessionKnown,
   setAuthFailureHandler,
+  setGlobalApiErrorHandler,
 } from "./services/authServices";
+import { isRateLimitError } from "./utils/apiErrorHelpers";
 
 const publicRoutes = ["/login", "/register"];
 
@@ -39,6 +41,7 @@ function App() {
     publicRoutes.includes(window.location.pathname) ? false : null
   );
   const [currentUser, setCurrentUser] = useState(null);
+  const [apiFeedback, setApiFeedback] = useState(null);
 
   useEffect(() => {
     const removeAuthFailureHandler = setAuthFailureHandler(() => {
@@ -46,6 +49,9 @@ function App() {
       setIsAuthenticated(false);
       clearAuthSessionHint();
       navigate("/login", { replace: true });
+    });
+    const removeGlobalApiErrorHandler = setGlobalApiErrorHandler((payload) => {
+      setApiFeedback(payload);
     });
 
     const checkUserSession = async () => {
@@ -68,7 +74,11 @@ function App() {
           setCurrentUser(response.data);
           markAuthSessionKnown();
           setIsAuthenticated(true);
-        } catch {
+        } catch (error) {
+          if (isRateLimitError(error)) {
+            return;
+          }
+
           // A 401 here usually means "visitor is not logged in", which is
           // normal on public pages and should not be treated as a fatal error.
           setCurrentUser(null);
@@ -88,7 +98,12 @@ function App() {
         setCurrentUser(response.data);
         markAuthSessionKnown();
         setIsAuthenticated(true);
-      } catch {
+      } catch (error) {
+        if (isRateLimitError(error)) {
+          setIsAuthenticated(true);
+          return;
+        }
+
         setCurrentUser(null);
         setIsAuthenticated(false);
         clearAuthSessionHint();
@@ -97,8 +112,27 @@ function App() {
 
     checkUserSession();
 
-    return removeAuthFailureHandler;
+    return () => {
+      removeAuthFailureHandler();
+      removeGlobalApiErrorHandler();
+    };
   }, [location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!apiFeedback) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setApiFeedback((currentFeedback) =>
+        currentFeedback?.id === apiFeedback.id ? null : currentFeedback
+      );
+    }, 4500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [apiFeedback]);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
@@ -130,6 +164,17 @@ function App() {
       {/* Subtle radial glows add depth while keeping the dashboard calm and readable. */}
       <div className="pointer-events-none fixed -left-32 top-24 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
       <div className="pointer-events-none fixed bottom-20 right-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+      {apiFeedback && (
+        <div className="pointer-events-none fixed right-4 top-4 z-50 max-w-sm px-4 sm:right-6 sm:top-6">
+          <div
+            role="status"
+            aria-live="polite"
+            className="pointer-events-auto rounded-2xl border border-rose-300/25 bg-slate-950/90 px-4 py-3 text-sm text-slate-100 shadow-2xl shadow-slate-950/40 backdrop-blur"
+          >
+            {apiFeedback.message}
+          </div>
+        </div>
+      )}
       {isAuthenticated && (
         <Navbar currentUser={currentUser} onLogout={handleLogout} />
       )}

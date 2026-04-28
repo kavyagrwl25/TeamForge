@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -18,8 +19,7 @@ function Dashboard({ user, onLogout }) {
       onLogout();
       navigate("/login", { replace: true });
     } catch (err) {
-      console.error(err);
-      setError("Logout failed. Please try again.");
+      setError(getApiErrorMessage(err, "Logout failed. Please try again."));
     } finally {
       setLoading(false);
     }

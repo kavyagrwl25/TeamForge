@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createJoinRequest } from "../services/requestServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function JoinRequestModal({
   project,
@@ -57,7 +58,7 @@ function JoinRequestModal({
       });
     } catch (err) {
       setError(
-        err.response?.data?.message || "Could not send request. Please try again."
+        getApiErrorMessage(err, "Could not send request. Please try again.")
       );
     } finally {
       setLoading(false);

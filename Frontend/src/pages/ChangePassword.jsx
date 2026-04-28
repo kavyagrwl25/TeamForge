@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { changePassword } from "../services/authServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function ChangePassword() {
   const navigate = useNavigate();
@@ -53,8 +54,7 @@ function ChangePassword() {
       }, 1200);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
-          "Password change failed. Please try again."
+        getApiErrorMessage(err, "Password change failed. Please try again.")
       );
     } finally {
       setLoading(false);

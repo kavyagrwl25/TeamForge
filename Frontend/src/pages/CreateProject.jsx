@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createProject } from "../services/projectServices";
+import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 const projectTypes = ["personal", "startup", "hackathon", "open-source"];
 
@@ -63,7 +64,7 @@ function CreateProject() {
       });
     } catch (err) {
       setError(
-        err.response?.data?.message || "Project creation failed. Please try again."
+        getApiErrorMessage(err, "Project creation failed. Please try again.")
       );
     } finally {
       setLoading(false);

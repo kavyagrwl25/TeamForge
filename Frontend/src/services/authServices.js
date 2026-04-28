@@ -1,10 +1,24 @@
 import axios from "axios";
+import {
+  isRateLimitError,
+  UNAUTHORIZED_MESSAGE,
+  normalizeApiError,
+  shouldNotifyGlobalApiError,
+} from "../utils/apiErrorHelpers";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
 const AUTH_SESSION_HINT_KEY = "teamforge_has_session";
 let refreshRequest = null;
 let authFailureHandler = null;
+let globalApiErrorHandler = null;
+let lastGlobalApiError = null;
+const AUTH_ROUTE_MATCHERS = [
+  "/users/login",
+  "/users/register",
+  "/users/refresh-token",
+  "/users/refresh-tokens",
+];
 
 export const API = axios.create({
   baseURL: API_BASE_URL,
@@ -26,6 +40,16 @@ export const setAuthFailureHandler = (handler) => {
   };
 };
 
+export const setGlobalApiErrorHandler = (handler) => {
+  globalApiErrorHandler = handler;
+
+  return () => {
+    if (globalApiErrorHandler === handler) {
+      globalApiErrorHandler = null;
+    }
+  };
+};
+
 export const hasAuthSessionHint = () => {
   return window.localStorage.getItem(AUTH_SESSION_HINT_KEY) === "true";
 };
@@ -41,26 +65,81 @@ export const clearAuthSessionHint = () => {
 const shouldSkipAuthRefresh = (request) => {
   const url = request?.url || "";
 
-  return (
-    request?.skipAuthRefresh ||
-    url.includes("/users/login") ||
-    url.includes("/users/register") ||
-    url.includes("/users/refresh-tokens")
-  );
+  return request?.skipAuthRefresh || AUTH_ROUTE_MATCHERS.some((route) => url.includes(route));
+};
+
+const isAuthRouteRequest = (request) => {
+  const url = request?.url || "";
+
+  return AUTH_ROUTE_MATCHERS.some((route) => url.includes(route));
+};
+
+const notifyGlobalApiError = (error) => {
+  if (
+    !globalApiErrorHandler ||
+    !shouldNotifyGlobalApiError(error, {
+      suppressNotification: isAuthRouteRequest(error?.config),
+    })
+  ) {
+    return;
+  }
+
+  const status = error.response?.status;
+  const message = error.userMessage || error.response?.data?.message;
+
+  if (!message) {
+    return;
+  }
+
+  const now = Date.now();
+
+  if (
+    lastGlobalApiError &&
+    lastGlobalApiError.status === status &&
+    lastGlobalApiError.message === message &&
+    now - lastGlobalApiError.timestamp < 1500
+  ) {
+    return;
+  }
+
+  lastGlobalApiError = {
+    status,
+    message,
+    timestamp: now,
+  };
+
+  globalApiErrorHandler({
+    id: now,
+    status,
+    message,
+  });
 };
 
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const isAuthRouteError = isAuthRouteRequest(error?.config);
+    const normalizedError = normalizeApiError(error, {
+      unauthorizedMessage:
+        !isAuthRouteError && !error?.config?.skipAuthRefresh
+          ? UNAUTHORIZED_MESSAGE
+          : undefined,
+    });
+    const originalRequest = normalizedError.config;
+
+    if (isRateLimitError(normalizedError)) {
+      notifyGlobalApiError(normalizedError);
+      return Promise.reject(normalizedError);
+    }
 
     if (
-      error.response?.status !== 401 ||
+      normalizedError.response?.status !== 401 ||
       !originalRequest ||
       originalRequest._retry ||
       shouldSkipAuthRefresh(originalRequest)
     ) {
-      return Promise.reject(error);
+      notifyGlobalApiError(normalizedError);
+      return Promise.reject(normalizedError);
     }
 
     // Interceptor flow: a protected request received 401, so the access token
@@ -83,6 +162,15 @@ API.interceptors.response.use(
       // After refresh succeeds, retry the original failed request once.
       return API(originalRequest);
     } catch (refreshError) {
+      const normalizedRefreshError = normalizeApiError(refreshError, {
+        unauthorizedMessage: UNAUTHORIZED_MESSAGE,
+      });
+
+      if (isRateLimitError(normalizedRefreshError)) {
+        notifyGlobalApiError(normalizedRefreshError);
+        return Promise.reject(normalizedRefreshError);
+      }
+
       // Refresh failure means both cookies are no longer usable. Clear frontend
       // auth state through App.jsx, then send the user back to login.
       clearAuthSessionHint();
@@ -93,7 +181,7 @@ API.interceptors.response.use(
         window.location.assign("/login");
       }
 
-      return Promise.reject(refreshError);
+      return Promise.reject(normalizedRefreshError);
     }
   }
 );

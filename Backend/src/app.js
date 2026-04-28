@@ -1,3 +1,6 @@
+import dotenv from "dotenv"
+dotenv.config()
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -40,20 +43,20 @@ const authLimiter = rateLimit({
     });
   },
 })
-app.use(globalLimiter);
-// middlewares
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
   })
 );
+// middlewares
 
 app.use(express.json({ limit: "16kb" }));               // limit request body to 16kb to prevent abuse
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));     // parse urlencoded bodies with a limit of 16kb
 app.use(express.static("public"));          // serve static files from the "public" directory
 app.use(cookieParser());                // parse cookies from incoming requests
 
+app.use(globalLimiter);
 // health check route
 app.get("/", (req, res) => {
   res.status(200).json({
