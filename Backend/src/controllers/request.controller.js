@@ -5,10 +5,12 @@ import { AsyncHandler } from "../utils/AsyncHandler.js";
 import { Project } from "../models/project.model.js";
 import { isValidRequestStatus } from "../utils/requestValidators.js";
 import mongoose from "mongoose";
+import { getIO, getUserSocket } from "../socket.js";
 
-const createRequest = AsyncHandler(async (req, res) => {
+const createRequest = AsyncHandler(async (req, res) => { 
+    // adding real time notifications using socket.io
     const requestedBy = req.user._id;
-    const { projectId } = req.params;
+    const { projectId } = req.params;  
     const { roleRequested, pitchMessage } = req.body;
 
     if (typeof roleRequested !== "string" || !roleRequested.trim()) {
@@ -48,10 +50,23 @@ const createRequest = AsyncHandler(async (req, res) => {
         roleRequested,
         pitchMessage
     });
-
+    
     const populatedRequest = await Request.findById(request._id)
-        .populate("requestedBy", "fullName userName email")
-        .populate("project", "title description techStack rolesNeeded projectType status");
+    .populate("requestedBy", "fullName userName email")
+    .populate("project", "title description techStack rolesNeeded projectType status");
+
+    const io = getIO();
+    const ownerId = projectExists.createdBy;
+    const socketId = getUserSocket(ownerId);
+
+    if (socketId) {
+        io.to(socketId).emit("new-request", {
+            message: `${populatedRequest.requestedBy.fullName} applied to your project "${projectExists.title}"`,
+            request: populatedRequest
+        });
+    } else {
+        console.log(`Owner of the project is not connected to receive real-time notifications. Owner ID: ${ownerId}`);
+    }
 
     return res
         .status(201)

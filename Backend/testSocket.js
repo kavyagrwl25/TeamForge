@@ -10,6 +10,10 @@ socket.on("welcome", (data) => {
   console.log("Received welcome message:", data);
 })
 
+socket.on("new-request", (data) => {
+  console.log("Notification:", data.message);
+});
+
 socket.on("disconnect", () => {
   console.log("Disconnected");
 });
