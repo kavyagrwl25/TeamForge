@@ -6,71 +6,94 @@ import { Project } from "../models/project.model.js";
 import { isValidRequestStatus } from "../utils/requestValidators.js";
 import mongoose from "mongoose";
 import { getIO, getUserSocket } from "../socket.js";
+import { Notification } from "../models/notification.model.js";
 
-const createRequest = AsyncHandler(async (req, res) => { 
-    // adding real time notifications using socket.io
-    const requestedBy = req.user._id;
-    const { projectId } = req.params;  
-    const { roleRequested, pitchMessage } = req.body;
+const createRequest = AsyncHandler(async (req, res) => {
+  const requestedBy = req.user._id;
+  const { projectId } = req.params;
+  const { roleRequested, pitchMessage } = req.body;
 
-    if (typeof roleRequested !== "string" || !roleRequested.trim()) {
-        throw new ApiError(400, "Role requested is required")
-    }
-    if (pitchMessage !== undefined && typeof pitchMessage !== "string") {
-        throw new ApiError(400, "Pitch message must be a string")
-    }
+  if (typeof roleRequested !== "string" || !roleRequested.trim()) {
+    throw new ApiError(400, "Role requested is required");
+  }
 
-    if (!projectId) {
-        throw new ApiError(400, "Project id is required");
-    }
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-        throw new ApiError(400, "Invalid project id");
-    }
-    const projectExists = await Project.findById(projectId);
-    if (!projectExists) {
-        throw new ApiError(404, "Project not found");
-    }
+  if (pitchMessage !== undefined && typeof pitchMessage !== "string") {
+    throw new ApiError(400, "Pitch message must be a string");
+  }
 
-    if (projectExists.createdBy.toString() === requestedBy.toString()) {
-        throw new ApiError(400, "You cannot send request to your own project");
-    }
+  if (!projectId) {
+    throw new ApiError(400, "Project id is required");
+  }
 
-    const duplicateReq = await Request.findOne({
-        requestedBy,
-        project: projectId
-    });
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new ApiError(400, "Invalid project id");
+  }
 
-    if (duplicateReq) {
-        throw new ApiError(400, "You have already sent request to this project");
-    }
+  const projectExists = await Project.findById(projectId);
 
-    const request = await Request.create({
-        requestedBy,
-        project: projectId,
-        roleRequested,
-        pitchMessage
-    });
-    
-    const populatedRequest = await Request.findById(request._id)
+  if (!projectExists) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  if (projectExists.createdBy.toString() === requestedBy.toString()) {
+    throw new ApiError(400, "You cannot send request to your own project");
+  }
+
+  const duplicateReq = await Request.findOne({
+    requestedBy,
+    project: projectId,
+  });
+
+  if (duplicateReq) {
+    throw new ApiError(400, "You have already sent request to this project");
+  }
+
+  const request = await Request.create({
+    requestedBy,
+    project: projectId,
+    roleRequested: roleRequested.trim(),
+    pitchMessage,
+  });
+
+  const populatedRequest = await Request.findById(request._id)
     .populate("requestedBy", "fullName userName email")
     .populate("project", "title description techStack rolesNeeded projectType status");
 
+  const ownerId = projectExists.createdBy.toString();
+
+  const message = `${populatedRequest.requestedBy.fullName} applied to your project`;
+
+  const notification = await Notification.create({
+    recipient: ownerId,
+    sender: requestedBy,
+    type: "NEW_REQUEST",
+    message,
+    data: {
+      requestId: populatedRequest._id,
+      projectId: populatedRequest.project._id,
+    },
+  });
+
+  const populatedNotification = await Notification.findById(notification._id)
+    .populate("sender", "fullName userName email");
+
+  const socketId = getUserSocket(ownerId);
+
+  if (socketId) {
     const io = getIO();
-    const ownerId = projectExists.createdBy;
-    const socketId = getUserSocket(ownerId);
+    io.to(socketId).emit("new-notification", populatedNotification);
+  }
 
-    if (socketId) {
-        io.to(socketId).emit("new-request", {
-            message: `${populatedRequest.requestedBy.fullName} applied to your project "${projectExists.title}"`,
-            request: populatedRequest
-        });
-    } else {
-        console.log(`Owner of the project is not connected to receive real-time notifications. Owner ID: ${ownerId}`);
-    }
-
-    return res
-        .status(201)
-        .json(new ApiResponse(201, populatedRequest, "Request created successfully"));
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        request: populatedRequest,
+        notification: populatedNotification,
+      },
+      "Request created successfully"
+    )
+  );
 });
 
 const getRequestsForMyProject = AsyncHandler(async (req, res) => {
@@ -158,49 +181,91 @@ const getMySentRequests = AsyncHandler( async(req, res) => {
 })
 
 const updateRequestStatus = AsyncHandler(async (req, res) => {
-    const userId = req.user?._id;
-    const { requestId } = req.params;
-    const { status } = req.body;
+  const userId = req.user?._id;
+  const { requestId } = req.params;
+  const { status } = req.body;
 
-    if (!isValidRequestStatus(status)) {
-        throw new ApiError(400, "Invalid request status");
-    }
-    if (status.trim().toLowerCase() === "pending") {
-        throw new ApiError(400, "Request cannot be updated back to pending");
-    }
-    if (!requestId) {
-        throw new ApiError(400, "Request id is required");
-    }
-    if (!mongoose.Types.ObjectId.isValid(requestId)) {
-        throw new ApiError(400, "Invalid request id");
-    }
-    const request = await Request.findById(requestId).populate("project");
+  if (!isValidRequestStatus(status)) {
+    throw new ApiError(400, "Invalid request status");
+  }
 
-    if (!request) {
-        throw new ApiError(404, "Request not found");
-    }
-    if (!request.project) {
-        await Request.findByIdAndDelete(requestId);
-        throw new ApiError(404, "Project for this request no longer exists");
-    }
-    if (request.project.createdBy.toString() !== userId.toString()) {
-        throw new ApiError(403, "You are not allowed to update this request");
-    }
-    if (request.status !== "pending") {
-        throw new ApiError(400, "Only pending requests can be updated");
-    }
-    
-    request.status = status.trim().toLowerCase();
-    await request.save();
+  const newStatus = status.trim().toLowerCase();
 
-    const updatedRequest = await Request.findById(request._id)
-        .populate("requestedBy", "fullName userName email")
-        .populate("project", "title description techStack rolesNeeded projectType status");
+  if (newStatus === "pending") {
+    throw new ApiError(400, "Request cannot be updated back to pending");
+  }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, updatedRequest, "Request status updated successfully"));
-})
+  if (!requestId) {
+    throw new ApiError(400, "Request id is required");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    throw new ApiError(400, "Invalid request id");
+  }
+
+  const request = await Request.findById(requestId).populate("project");
+
+  if (!request) {
+    throw new ApiError(404, "Request not found");
+  }
+
+  if (!request.project) {
+    await Request.findByIdAndDelete(requestId);
+    throw new ApiError(404, "Project for this request no longer exists");
+  }
+
+  if (request.project.createdBy.toString() !== userId.toString()) {
+    throw new ApiError(403, "You are not allowed to update this request");
+  }
+
+  if (request.status !== "pending") {
+    throw new ApiError(400, "Only pending requests can be updated");
+  }
+
+  request.status = newStatus;
+  await request.save();
+
+  const updatedRequest = await Request.findById(request._id)
+    .populate("requestedBy", "fullName userName email")
+    .populate("project", "title description techStack rolesNeeded projectType status");
+
+  const requesterId = updatedRequest.requestedBy._id.toString();
+
+  const message = `Your request for "${updatedRequest.project.title}" was ${updatedRequest.status}`;
+
+  const notification = await Notification.create({
+    recipient: requesterId,
+    sender: userId,
+    type: "REQUEST_STATUS_UPDATED",
+    message,
+    data: {
+      requestId: updatedRequest._id,
+      projectId: updatedRequest.project._id,
+    },
+  });
+
+  const populatedNotification = await Notification.findById(notification._id)
+    .populate("sender", "fullName userName email");
+
+  const requesterSocketId = getUserSocket(requesterId);
+
+  if (requesterSocketId) {
+    getIO().to(requesterSocketId).emit("new-notification", populatedNotification);
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          request: updatedRequest,
+          notification: populatedNotification,
+        },
+        "Request status updated successfully"
+      )
+    );
+});
 
 const deleteRequest = AsyncHandler( async(req, res) => {
     // get the request id from req.params

@@ -2,7 +2,7 @@ let io;
 
 const userSocketMap = new Map(); // Map to store userId to socketId mapping for targeted notifications
 
-export const initSocket = (socketServer) => {  
+export const initSocket = (socketServer) => {         // Initialize the Socket.IO server and store it in a global variable for use in controllers to emit events
   io = socketServer;
 };
 

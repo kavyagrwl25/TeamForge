@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit"
 import userRoutes from "./routes/user.routes.js";
 import projectRoutes from "./routes/project.routes.js";
 import requestRoutes from "./routes/request.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use("/api/v1/users/refresh-tokens", authLimiter);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/projects", projectRoutes);
 app.use("/api/v1/requests", requestRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // 404 handler
 app.use((req, res) => {
