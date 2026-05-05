@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link } from "react-router-dom";
 import { getCurrentUser } from "../services/authServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
@@ -42,8 +43,10 @@ function Profile({ currentUser }) {
 
   if (error) {
     return (
-      <div className="min-h-screen px-4 py-8 text-red-300">
-        <main className="mx-auto max-w-4xl">{error}</main>
+      <div className="min-h-screen px-4 py-8 text-slate-100">
+        <main className="mx-auto max-w-4xl">
+          <ErrorAlert>{error}</ErrorAlert>
+        </main>
       </div>
     );
   }

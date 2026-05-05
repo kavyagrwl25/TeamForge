@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { useNavigate } from "react-router-dom";
 import {
   changePassword,
@@ -215,9 +216,9 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
 
   if (!initialProfile) {
     return (
-      <div className="min-h-screen px-4 py-8 text-red-300">
+      <div className="min-h-screen px-4 py-8 text-slate-100">
         <main className="mx-auto max-w-5xl">
-          {profileError || "Could not load settings."}
+          <ErrorAlert>{profileError || "Could not load settings."}</ErrorAlert>
         </main>
       </div>
     );
@@ -299,9 +300,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
               </button>
             </form>
 
-            {profileError && (
-              <p className="mt-4 text-sm text-red-500">{profileError}</p>
-            )}
+            {profileError && <ErrorAlert className="mt-4">{profileError}</ErrorAlert>}
             {profileSuccess && (
               <p className="mt-4 text-sm text-green-600">{profileSuccess}</p>
             )}
@@ -340,7 +339,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
               </form>
 
               {passwordError && (
-                <p className="mt-4 text-sm text-red-500">{passwordError}</p>
+                <ErrorAlert className="mt-4">{passwordError}</ErrorAlert>
               )}
               {passwordSuccess && (
                 <p className="mt-4 text-sm text-green-600">
@@ -390,9 +389,7 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
               className="mt-5 w-full rounded-lg border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-red-400"
             />
 
-            {deleteError && (
-              <p className="mt-4 text-sm text-red-500">{deleteError}</p>
-            )}
+            {deleteError && <ErrorAlert className="mt-4">{deleteError}</ErrorAlert>}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button

@@ -17,7 +17,7 @@ app.set("trust proxy", 1);
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per IP
+  max: 200, // 200 requests per IP
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {

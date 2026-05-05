@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
@@ -61,7 +62,7 @@ function Dashboard({ user, onLogout }) {
             here after the auth flow is stable.
           </p>
 
-          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+          {error && <ErrorAlert className="mt-4">{error}</ErrorAlert>}
         </section>
 
         <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,7 +1,7 @@
 export const RATE_LIMIT_MESSAGE =
-  "Too many requests. Please try again later.";
+  "You're doing that a bit too fast. Please wait a moment and try again.";
 export const LOGIN_RATE_LIMIT_MESSAGE =
-  "Too many login attempts. Please wait and try again.";
+  "You're doing that a bit too fast. Please wait a moment and try again.";
 
 export const NOT_FOUND_MESSAGE = "We couldn't find what you were looking for.";
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import PaginationComponent from "../components/Pagination";
 import ProjectCard from "../components/ProjectCard";
@@ -91,7 +92,7 @@ function MyProjects() {
         </div>
 
         {loading && <p className="text-slate-300">Loading projects...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <ErrorAlert className="mb-4">{error}</ErrorAlert>}
 
         {!loading && !error && projects.length === 0 && (
           <div className="rounded-lg border border-white/10 bg-slate-900/80 p-6 text-slate-300 shadow-xl shadow-slate-950/30">

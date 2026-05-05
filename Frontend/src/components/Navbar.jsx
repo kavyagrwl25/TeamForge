@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authServices";
+import ErrorAlert from "./ErrorAlert";
 import { getProfileImage, getUserInitials } from "../utils/profileHelpers";
 
 const formatNotificationDate = (value) => {
@@ -18,6 +19,15 @@ const formatNotificationDate = (value) => {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(parsedDate);
+};
+
+const formatNotificationType = (type) => {
+  const map = {
+    NEW_REQUEST: "New Request",
+    REQUEST_STATUS_UPDATED: "Request Status Updated",
+  };
+
+  return map[type] || "Notification";
 };
 
 function Navbar({
@@ -152,7 +162,7 @@ function Navbar({
 
             {notificationMenuOpen && (
               <div
-                className="absolute right-0 z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl shadow-slate-950/40 backdrop-blur"
+                className="absolute right-0 z-50 mt-2 w-[22.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 shadow-2xl shadow-slate-950/40 backdrop-blur"
                 role="menu"
               >
                 <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -185,9 +195,9 @@ function Navbar({
                     </div>
                   ) : notificationsError ? (
                     <div className="space-y-3 px-4 py-6">
-                      <p className="text-sm text-rose-300">
+                      <ErrorAlert className="px-3 py-2 text-xs">
                         {notificationsError}
-                      </p>
+                      </ErrorAlert>
                       <button
                         type="button"
                         onClick={onRetryNotifications}
@@ -206,35 +216,38 @@ function Navbar({
                           <button
                             key={notification._id}
                             type="button"
-                            onClick={() => onNotificationClick(notification._id)}
+                            onClick={() => {
+                              setNotificationMenuOpen(false);
+                              onNotificationClick(notification._id);
+                            }}
                             disabled={isActive}
-                            className={`block w-full px-4 py-3 text-left transition ${
+                            className={`block w-full px-4 py-3.5 text-left transition ${
                               notification.isRead
                                 ? "bg-transparent hover:bg-white/5"
                                 : "bg-sky-500/10 hover:bg-sky-500/15"
                             } ${isActive ? "cursor-wait" : ""}`}
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="truncate text-sm font-medium text-white">
+                            <div className="flex items-start gap-3">
+                              <div className="flex min-w-0 flex-1 flex-col gap-1.5 pr-1">
+                                <div className="flex items-start gap-2">
+                                  <span className="min-w-0 flex-1 break-words text-sm font-semibold leading-5 text-white">
                                     {notification.message}
                                   </span>
                                   {!notification.isRead && (
-                                    <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-400" />
+                                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sky-400" />
                                   )}
                                 </div>
-                                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
-                                  {notification.type || "Update"}
+                                <p className="text-xs font-medium text-slate-400">
+                                  {formatNotificationType(notification.type)}
                                 </p>
-                                <p className="mt-2 text-xs text-slate-500">
+                                <p className="text-xs text-slate-500">
                                   {formatNotificationDate(
                                     notification.createdAt
                                   )}
                                 </p>
                               </div>
                               {isActive && (
-                                <span className="shrink-0 text-xs text-slate-500">
+                                <span className="mt-0.5 shrink-0 text-xs text-slate-500">
                                   Saving...
                                 </span>
                               )}

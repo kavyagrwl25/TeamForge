@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link } from "react-router-dom";
 import JoinRequestModal from "../components/JoinRequestModal";
 import PaginationComponent from "../components/Pagination";
@@ -259,9 +260,9 @@ function ExploreProjects() {
           </div>
         )}
         {error && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+          <ErrorAlert className="mb-4">
             {error}
-          </div>
+          </ErrorAlert>
         )}
 
         {!loading && !error && projects.length === 0 && (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link } from "react-router-dom";
 import { createProject } from "../services/projectServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
@@ -162,7 +163,7 @@ function CreateProject() {
             </button>
           </div>
 
-          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+          {error && <ErrorAlert className="mt-4">{error}</ErrorAlert>}
           {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
         </form>
       </main>

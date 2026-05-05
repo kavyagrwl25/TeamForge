@@ -184,17 +184,12 @@ function App() {
         }
 
         setNotifications(nextNotifications);
-      } catch (error) {
+      } catch {
         if (!isActive) {
           return;
         }
 
-        setNotificationsError(
-          getApiErrorMessage(
-            error,
-            "Unable to load notifications right now. Please try again."
-          )
-        );
+        setNotificationsError("Couldn't load notifications. Please try again.");
       } finally {
         if (isActive) {
           setNotificationsLoading(false);
@@ -275,7 +270,21 @@ function App() {
       (notification) => notification._id === notificationId
     );
 
-    if (!notificationId || !selectedNotification || selectedNotification.isRead) {
+    if (!notificationId || !selectedNotification) {
+      return;
+    }
+
+    const notificationProjectId =
+      selectedNotification.data?.projectId?._id ||
+      selectedNotification.data?.projectId;
+
+    const destination =
+      selectedNotification.type === "NEW_REQUEST" && notificationProjectId
+        ? `/projects/${notificationProjectId}/requests`
+        : "/requests/me";
+
+    if (selectedNotification.isRead) {
+      navigate(destination);
       return;
     }
 
@@ -296,6 +305,7 @@ function App() {
             : notification
         )
       );
+      navigate(destination);
     } catch (error) {
       setNotificationToast({
         id: Date.now(),

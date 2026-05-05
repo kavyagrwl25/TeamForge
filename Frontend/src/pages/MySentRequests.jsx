@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link } from "react-router-dom";
 import PaginationComponent from "../components/Pagination";
 import {
@@ -88,7 +89,7 @@ function MySentRequests() {
         </div>
 
         {loading && <p className="text-slate-300">Loading requests...</p>}
-        {error && <p className="mb-4 text-red-500">{error}</p>}
+        {error && <ErrorAlert className="mb-4">{error}</ErrorAlert>}
         {success && <p className="mb-4 text-green-600">{success}</p>}
 
         {!loading && !error && requests.length === 0 && (

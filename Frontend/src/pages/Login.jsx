@@ -1,4 +1,5 @@
 import { createElement, useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
 import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
@@ -356,9 +357,9 @@ function Login({ onLoginSuccess }) {
 
               <div aria-live="polite" className="min-h-11">
                 {error && (
-                  <div className="rounded-xl border border-rose-300/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                  <ErrorAlert>
                     {error}
-                  </div>
+                  </ErrorAlert>
                 )}
 
                 {!error && loading && (

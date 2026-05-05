@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
@@ -117,7 +118,7 @@ function Register() {
         </div>
 
         {error && (
-          <p className="mt-4 text-center text-sm text-red-500">{error}</p>
+          <ErrorAlert className="mt-4 text-center">{error}</ErrorAlert>
         )}
 
         {success && (

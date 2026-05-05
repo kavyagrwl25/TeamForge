@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ErrorAlert from "./ErrorAlert";
 import { createJoinRequest } from "../services/requestServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
@@ -113,7 +114,7 @@ function JoinRequestModal({
           </button>
         </form>
 
-        {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+        {error && <ErrorAlert className="mt-4">{error}</ErrorAlert>}
         {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
       </div>
     </div>
