@@ -12,4 +12,4 @@ router.get("/", verifyToken, getMyNotifications);
 router.patch("/:notificationId/read", verifyToken, markNotificationAsRead);
 router.patch("/read-all", verifyToken, markAllNotificationsAsRead);
 
-export default router;
+export default router; 
