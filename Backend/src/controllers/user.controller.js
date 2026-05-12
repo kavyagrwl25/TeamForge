@@ -7,18 +7,20 @@ import { Request } from "../models/request.model.js"
 import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio, isValidSkills, isValidSocialLinks } from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
-const accessTokenOptions = {
+const baseCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 15 * 60 * 1000 
 };
 
-const refreshTokenOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000 
+const accessTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 15 * 60 * 1000,
+};
+
+const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 const generateTokens =  async(userId) => {
@@ -81,17 +83,11 @@ const login = AsyncHandler(async (req, res) => {
     if (!isValidPassword(password)) {
         throw new ApiError(400, "Please enter a valid password")
     }
-    console.log("Login attempt:", {
-        email: normalizedEmail,
-        passwordLength: password?.length,
-    })
     const user = await User.findOne({ email: normalizedEmail })
-    console.log("User found:", !!user)
     if (!user) {
         throw new ApiError(401, "Invalid credentials")
     }
     const isPasswordCorrect = await user.isPasswordCorrect(password)
-    console.log("Password matched:", isPasswordCorrect)
     if (!isPasswordCorrect) {
         throw new ApiError(401, "Invalid credentials")
     }
@@ -100,8 +96,8 @@ const login = AsyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .cookie("accessToken", accessToken, accessTokenOptions)
-        .cookie("refreshToken", refreshToken, refreshTokenOptions)
+        .cookie("accessToken", accessToken, accessTokenCookieOptions)
+        .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
         .json(
             new ApiResponse(
                 200,
@@ -126,8 +122,8 @@ const logout = AsyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .clearCookie("accessToken", accessTokenOptions)   
-    .clearCookie("refreshToken", refreshTokenOptions)   
+    .clearCookie("accessToken", baseCookieOptions)   
+    .clearCookie("refreshToken", baseCookieOptions)   
     .json(new ApiResponse(200, {}, "User logged out successfully"))
 }) 
 
@@ -150,8 +146,8 @@ const refreshTokens = AsyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .cookie("accessToken", newAccessToken, accessTokenOptions)
-    .cookie("refreshToken", newRefreshToken, refreshTokenOptions)
+    .cookie("accessToken", newAccessToken, accessTokenCookieOptions)
+    .cookie("refreshToken", newRefreshToken, refreshTokenCookieOptions)
     .json(new ApiResponse(200, {}, "Tokens refreshed successfully"))
 })
 
@@ -178,8 +174,8 @@ const changePassword = AsyncHandler( async(req, res) => {
 
     return res
     .status(200)
-    .cookie("accessToken", newAccessToken, accessTokenOptions)
-    .cookie("refreshToken", newRefreshToken, refreshTokenOptions)
+    .cookie("accessToken", newAccessToken, accessTokenCookieOptions)
+    .cookie("refreshToken", newRefreshToken, refreshTokenCookieOptions)
     .json(new ApiResponse(200, {}, "Changed password successfully"))
 })
 
@@ -294,8 +290,8 @@ const deleteUser = AsyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .clearCookie("accessToken", accessTokenOptions)
-        .clearCookie("refreshToken", refreshTokenOptions)
+        .clearCookie("accessToken", baseCookieOptions)
+        .clearCookie("refreshToken", baseCookieOptions)
         .json(new ApiResponse(200, {}, "User deleted successfully"));
 });
 
