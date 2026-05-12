@@ -15,13 +15,12 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+const corsOrigin =
+  process.env.CORS_ORIGIN || "https://teamforge-frontend-nine.vercel.app";
 
 app.use(
   cors({
-    origin: corsOrigin.includes(",")
-      ? corsOrigin.split(",").map((origin) => origin.trim())
-      : corsOrigin,
+    origin: corsOrigin,
     credentials: true,
   })
 );

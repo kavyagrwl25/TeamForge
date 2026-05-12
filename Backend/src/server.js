@@ -8,7 +8,8 @@ import { initSocket, addUserSocket, removeUserSocket } from "./socket.js";
 import connectDb from "./config/dbConnection.js";
 
 const PORT = process.env.PORT || 4000;
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [];
+const allowedOrigin =
+  process.env.CORS_ORIGIN || "https://teamforge-frontend-nine.vercel.app";
 
 const startServer = async () => {
   try {
@@ -18,7 +19,7 @@ const startServer = async () => {
 
     const io = new Server(server, {
       cors: {
-        origin: allowedOrigins,
+        origin: allowedOrigin,
         credentials: true,
       },
     });

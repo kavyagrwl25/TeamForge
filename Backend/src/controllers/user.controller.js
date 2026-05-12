@@ -7,12 +7,21 @@ import { Request } from "../models/request.model.js"
 import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio, isValidSkills, isValidSocialLinks } from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
-const baseCookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-};
+const isProduction = process.env.NODE_ENV === "production"
+
+const baseCookieOptions = isProduction
+    ? {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+    }
+    : {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        path: "/",
+    };
 
 const accessTokenCookieOptions = {
     ...baseCookieOptions,
