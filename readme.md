@@ -1,256 +1,314 @@
 # 🚀 TeamForge
 
-**TeamForge** is a full-stack developer collaboration platform designed to streamline how developers discover projects, connect with collaborators, and build together in a structured and scalable way.
+> A full-stack developer collaboration platform that helps developers discover projects, connect with compatible teammates, and build together in real time.
 
 ---
 
-## 🧩 Overview
+## 🌐 Live Demo
 
-In today’s ecosystem, developers are highly motivated to build, learn, and collaborate. However, the process of finding the right project or the right team is often fragmented and inefficient.
-
-TeamForge addresses this gap by providing a **centralized system for project discovery and collaboration management**, enabling developers to move from idea → team → execution in a more organized way.
+**🔗 Live Application:** [https://teamforge-frontend-nine.vercel.app](https://teamforge-frontend-nine.vercel.app)
 
 ---
 
-## ❗ Problem Statement
+# 📌 About TeamForge
 
-Modern developer collaboration suffers from a lack of structure and visibility.
+TeamForge is a production-ready MERN stack platform designed to solve a common problem faced by developers:
 
-### Key Challenges:
+> *Finding the right people and the right projects to collaborate on.*
 
-* **Fragmented Discovery**
+Developers can:
 
-  * Project opportunities are scattered across multiple platforms (WhatsApp, Discord, LinkedIn, etc.)
-  * No centralized place to explore meaningful projects
+* Create and showcase projects
+* Explore projects posted by others
+* Send collaboration requests
+* Accept or reject teammates
+* Receive real-time notifications
+* Connect with developers based on tech stack compatibility
 
-* **Lack of Structured Profiles**
-
-  * Developers cannot effectively showcase skills, interests, and experience in a collaboration context
-  * Project owners struggle to evaluate potential contributors
-
-* **Inefficient Team Formation**
-
-  * No standard workflow for:
-
-    * Expressing interest in a project
-    * Reviewing applicants
-    * Accepting/rejecting requests
-
-* **Poor Scalability**
-
-  * Informal systems do not scale as projects or communities grow
-  * Leads to missed opportunities and weak collaboration
+The platform focuses on scalable backend architecture, secure authentication, clean API design, and real-world production deployment.
 
 ---
 
-## 💡 Solution
+# ✨ Features
 
-TeamForge introduces a **structured collaboration layer** for developers.
+## 👤 Authentication & Security
 
-### Core Ideas:
+* JWT Authentication
+* Refresh & Access Token Flow
+* HTTP-only Cookie-Based Sessions
+* Protected Routes & Middleware
+* Rate Limiting for Auth & APIs
+* Secure Password Hashing with bcrypt
 
-* **Profile-Centric Identity**
-
-  * Developers maintain structured profiles highlighting skills and experience
-
-* **Project-Based Discovery**
-
-  * Project owners define ideas along with required roles and technologies
-
-* **Request-Based Collaboration Workflow**
-
-  * Developers apply to projects via structured requests
-  * Owners review and manage incoming requests
-
-* **Systematic Team Formation**
-
-  * Replaces informal communication with a scalable backend-driven workflow
-
----
-
-## 🏗️ System Architecture
-
-TeamForge is built as a modular full-stack application:
-
-* **Frontend:** React (Vite) + Tailwind CSS
-* **Backend:** Node.js + Express.js
-* **Database:** MongoDB
-* **Authentication:** JWT with Access & Refresh Tokens (HTTP-only cookies)
-
-### Communication Flow:
-
-Frontend → REST API → Backend → Database
-
----
-
-## ⚙️ Core Features
-
-### 🔐 Authentication & Session Management
-
-* Secure user registration and login
-* JWT-based authentication
-* Access & refresh token mechanism
-* Refresh token rotation
-* HTTP-only cookie-based session handling
-
-### 👤 User Management
-
-* Create and manage developer profiles
-* Update profile information
-* Change password securely
-* Delete account
-
-### 📁 Project Management
+## 📂 Project Management
 
 * Create, update, and delete projects
-* Define required roles and tech stack
-* View own projects
-* Explore projects created by others
+* Explore projects posted by other developers
+* Search and filter projects efficiently
+* Pagination support for scalability
+* Tech stack & role-based project matching
 
-### 🤝 Collaboration Requests
+## 🤝 Collaboration Workflow
 
-* Send request to join a project
-* Prevent duplicate and invalid requests
-* View incoming requests (project owner)
-* View sent requests (applicant)
-* Delete requests
-* Request status workflow (in progress)
+* Send collaboration requests
+* Accept or reject incoming requests
+* View sent and received requests
+* Prevent duplicate collaboration requests
 
-### 🧱 Backend Design Principles
+## 🔔 Real-Time Notifications
 
-* Versioned REST API (`/api/v1`)
-* Middleware-driven route protection
+* Socket.IO powered notification system
+* Instant updates for request actions
+* Real-time user connection handling
+
+## ⚡ Production Engineering
+
+* Cloud deployment with Render & Vercel
+* MongoDB Atlas integration
+* CORS & cookie handling for production
 * Centralized error handling
-* Async controller abstraction
-* Input validation layer
-* Clean and modular architecture
+* Scalable REST API architecture
+* Environment-based configuration
 
 ---
 
-## 🛠️ Tech Stack
+# 🛠️ Tech Stack
 
-### Frontend
+## Frontend
 
-* React (Vite)
-* Tailwind CSS
+* React.js
+* Vite
+* React Router DOM
 * Axios
+* Tailwind CSS
+* Bootstrap
+* Socket.IO Client
 
-### Backend
+## Backend
 
 * Node.js
 * Express.js
-
-### Database
-
 * MongoDB
 * Mongoose
-
-### Security
-
-* JWT
+* Socket.IO
+* JWT Authentication
+* Express Rate Limit
+* Cookie Parser
 * bcrypt
-* HTTP-only cookies
-* CORS
+
+## Deployment & Cloud
+
+* Vercel (Frontend)
+* Render (Backend)
+* MongoDB Atlas
 
 ---
 
-## 📁 Project Structure
+# 🧠 Backend Architecture Highlights
 
-```
-TeamForge/
-├── backend/
-│   ├── src/
-│   ├── .env
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   ├── index.html
-│   └── package.json
-│
-├── README.md
-└── .gitignore
-```
+## 🔹 Authentication System
+
+Implemented a scalable authentication flow using:
+
+* Short-lived Access Tokens
+* Long-lived Refresh Tokens
+* Automatic token refresh handling
+* HTTP-only cookies for enhanced security
 
 ---
 
-## 🔄 Authentication Flow
+## 🔹 Scalable API Design
 
-* Access Token → Used for protected API requests
-* Refresh Token → Used to generate new access tokens
-* Tokens stored securely in HTTP-only cookies
-* Automatic session renewal via refresh endpoint
+Designed RESTful APIs with:
 
----
-
-## ▶️ Getting Started
-
-### Backend
-
-```
-cd backend
-npm install
-npm run dev
-```
-
-### Frontend
-
-```
-cd frontend
-npm install
-npm run dev
-```
+* Pagination
+* Filtering
+* Search pipelines
+* Consistent response structures
+* Centralized error handling
 
 ---
 
-## 📊 Development Status
+## 🔹 Real-Time Communication
 
-### ✅ Completed
+Integrated Socket.IO for:
 
-* Backend architecture and API design
-* Authentication system (JWT + refresh flow)
-* User management
-* Project CRUD operations
-* Request system (core functionality)
-
-### 🚧 In Progress
-
-* Request accept/reject workflow
-* Frontend integration
-* Route protection on UI
-
-### 🔮 Planned
-
-* Pagination, filtering, and search
 * Real-time notifications
-* Chat system (WebSockets)
-* AI-assisted features (chatbot for guidance)
-* Deployment and DevOps setup
-* API documentation
+* User connection tracking
+* Instant collaboration updates
 
 ---
 
-## 🎯 Why TeamForge?
+# 📁 Folder Structure
 
-TeamForge is designed as a **product-oriented project**, not just a CRUD application.
-
-It demonstrates:
-
-* Real-world backend architecture
-* Secure authentication strategies
-* Scalable API design
-* Structured collaboration systems
-* Full-stack integration mindset
+```bash
+TeamForge/
+│
+├── Backend/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── utils/
+│   │   ├── socket.js
+│   │   ├── app.js
+│   │   └── server.js
+│   │
+│   └── package.json
+│
+├── Frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── contexts/
+│   │   └── App.jsx
+│   │
+│   └── package.json
+│
+└── README.md
+```
 
 ---
 
-## 👨‍💻 Author
+# ⚙️ Local Setup
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/kavyagrwl25/TeamForge.git
+```
+
+---
+
+## 2️⃣ Backend Setup
+
+```bash
+cd Backend
+npm install
+npm run dev
+```
+
+Create `.env` inside Backend:
+
+```env
+PORT=4000
+NODE_ENV=development
+MONGO_URI=your_mongodb_uri
+CORS_ORIGIN=http://localhost:5173
+ACCESS_TOKEN_SECRET=your_secret
+ACCESS_TOKEN_EXPIRY=15m
+REFRESH_TOKEN_SECRET=your_secret
+REFRESH_TOKEN_EXPIRY=7d
+```
+
+---
+
+## 3️⃣ Frontend Setup
+
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+Create `.env` inside Frontend:
+
+```env
+VITE_API_BASE_URL=http://localhost:4000/api/v1
+```
+
+---
+
+# 📡 API Highlights
+
+## User Routes
+
+* User Registration
+* Login & Logout
+* Refresh Tokens
+* Change Password
+* Profile Management
+
+## Project Routes
+
+* Create Project
+* Update Project
+* Delete Project
+* Explore Projects
+* Search & Pagination
+
+## Collaboration Routes
+
+* Send Request
+* Accept/Reject Request
+* View Requests
+
+## Notification Routes
+
+* Real-Time Notifications
+* Read/Unread Handling
+
+---
+
+# 🚀 Deployment
+
+## Frontend Deployment
+
+* Hosted on Vercel
+* Configured SPA routing using `vercel.json`
+
+## Backend Deployment
+
+* Hosted on Render
+* Connected to MongoDB Atlas
+* Production CORS & cookie handling configured
+
+---
+
+# 📈 Future Improvements
+
+* AI-powered project recommendations
+* Fake project/spam detection system
+* Team chat functionality
+* Advanced developer matching
+* Project analytics dashboard
+* Redis caching layer
+* Dockerized deployment
+* CI/CD pipeline integration
+* Scalable notification queue system
+
+---
+
+# 📸 Screenshots
+
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+---
+
+# 🤝 Contributing
+
+Contributions, ideas, and feedback are always welcome.
+
+Feel free to fork the project and open a pull request.
+
+---
+
+# 👨‍💻 Author
 
 **Kavya Agrawal**
-MERN Stack Developer | Backend-Focused Engineer
+
+* GitHub: [https://github.com/](https://github.com/)
+* LinkedIn: [https://linkedin.com/](https://linkedin.com/)
 
 ---
 
-## ⭐ Support
+# ⭐ Support
 
-If you found this project useful or interesting, consider giving it a star ⭐
+If you found this project helpful, consider giving it a star ⭐
+and sharing it with others!
