@@ -115,7 +115,7 @@ const getRequestsForMyProject = AsyncHandler(async (req, res) => {
         throw new ApiError(403, "You are not allowed to view requests for this project")
     }
     const requests = await Request.find({ project: projectId })
-    .populate("requestedBy", "fullName userName email")
+    .populate("requestedBy", "fullName userName email bio skills socialLinks")
     .sort({ createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(limit)
@@ -143,7 +143,14 @@ const getMySentRequests = AsyncHandler( async(req, res) => {
     const skip = (page - 1) * limit
     const userId = req.user?._id
     const requests = await Request.find({ requestedBy: userId })
-    .populate("project", "title description status")
+    .populate({
+        path: "project",
+        select: "title description status createdBy",
+        populate: {
+            path: "createdBy",
+            select: "fullName userName email"
+        }
+    })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -226,7 +233,7 @@ const updateRequestStatus = AsyncHandler(async (req, res) => {
   await request.save();
 
   const updatedRequest = await Request.findById(request._id)
-    .populate("requestedBy", "fullName userName email")
+    .populate("requestedBy", "fullName userName email bio skills socialLinks")
     .populate("project", "title description techStack rolesNeeded projectType status");
 
   const requesterId = updatedRequest.requestedBy._id.toString();

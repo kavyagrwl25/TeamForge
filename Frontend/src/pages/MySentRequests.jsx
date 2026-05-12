@@ -144,6 +144,20 @@ function MySentRequests() {
                 {request.pitchMessage || "No pitch message provided."}
               </p>
 
+              {request.status === "accepted" &&
+                (request.project?.createdBy?.email ? (
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(request.project.createdBy.email)}&su=${encodeURIComponent("Regarding my accepted TeamForge request")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 inline-flex rounded-lg border border-green-400/30 bg-green-500/10 px-4 py-2 font-medium text-green-200 transition hover:bg-green-500/20 hover:text-green-100"
+                  >
+                    Contact Owner
+                  </a>
+                ) : (
+                  <p className="mt-5 text-sm text-slate-500">Email unavailable</p>
+                ))}
+
               {request.status !== "accepted" && (
                 <button
                   type="button"

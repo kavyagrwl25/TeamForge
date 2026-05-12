@@ -8,6 +8,22 @@ import { updateRequestStatus } from "../services/requestServices";
 import { getApiErrorMessage } from "../utils/apiErrorHelpers";
 
 function RequesterProfileModal({ request, requester, getInitials, onClose }) {
+  const skills = Array.isArray(requester?.skills)
+    ? requester.skills.filter(Boolean)
+    : typeof requester?.skills === "string"
+      ? requester.skills
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean)
+      : [];
+  const socialLinks = requester?.socialLinks || {};
+  const bio =
+    typeof requester?.bio === "string" && requester.bio.trim()
+      ? requester.bio.trim()
+      : "Bio not added";
+  const githubLink = socialLinks.github || requester?.github || "";
+  const linkedinLink = socialLinks.linkedin || requester?.linkedin || "";
+
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
@@ -58,6 +74,52 @@ function RequesterProfileModal({ request, requester, getInitials, onClose }) {
               <p className="mt-1 break-words text-slate-100">
                 {requester.email || "No email available"}
               </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">Bio</p>
+              <p className="mt-1 whitespace-pre-wrap leading-7 text-slate-100">
+                {bio}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">Skills</p>
+              <p className="mt-1 break-words text-slate-100">
+                {skills.length > 0 ? skills.join(", ") : "Skills not added"}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">GitHub</p>
+              {githubLink ? (
+                <a
+                  href={githubLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex break-all text-sky-300 transition hover:text-sky-200"
+                >
+                  {githubLink}
+                </a>
+              ) : (
+                <p className="mt-1 text-slate-100">GitHub not added</p>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-sm font-semibold text-slate-400">LinkedIn</p>
+              {linkedinLink ? (
+                <a
+                  href={linkedinLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex break-all text-sky-300 transition hover:text-sky-200"
+                >
+                  {linkedinLink}
+                </a>
+              ) : (
+                <p className="mt-1 text-slate-100">LinkedIn not added</p>
+              )}
             </div>
 
             <div className="rounded-xl border border-white/10 bg-slate-950/50 p-4">
@@ -152,14 +214,20 @@ function ProjectRequests() {
 
     try {
       const response = await updateRequestStatus(requestId, { status });
+      const updatedRequest = response?.data?.request;
 
       setRequests((prev) =>
         Array.isArray(prev)
           ? prev.map((request) =>
-              request._id === requestId ? response.data : request
+              request._id === requestId && updatedRequest ? updatedRequest : request
             )
           : []
       );
+
+      if (selectedRequest?._id === requestId && updatedRequest) {
+        setSelectedRequest(updatedRequest);
+      }
+
       setSuccess(`Request ${status} successfully.`);
     } catch (err) {
       setError(getApiErrorMessage(err, "Could not update request status."));
@@ -181,14 +249,14 @@ function ProjectRequests() {
 
   const getStatusBadgeClass = (status) => {
     if (status === "accepted") {
-      return "bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-sm";
+      return "rounded-full border border-green-400/40 bg-green-500/20 px-3 py-1 text-sm text-green-200";
     }
 
     if (status === "rejected") {
-      return "bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-sm";
+      return "rounded-full border border-red-400/40 bg-red-500/20 px-3 py-1 text-sm text-red-200";
     }
 
-    return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded-full text-sm";
+    return "rounded-full border border-amber-400/40 bg-amber-500/20 px-3 py-1 text-sm text-amber-100";
   };
 
   const selectedRequester = selectedRequest?.requestedBy || {};
@@ -305,6 +373,20 @@ function ProjectRequests() {
                 >
                   View Profile
                 </button>
+
+                {request.status === "accepted" &&
+                  (request.requestedBy?.email ? (
+                    <a
+                      href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(request.requestedBy?.email)}&su=${encodeURIComponent("Regarding your TeamForge request")}`}
+                      className="rounded-lg border border-green-400/30 bg-green-500/10 px-4 py-2 font-medium text-green-200 transition hover:bg-green-500/20 hover:text-green-100"
+                    >
+                      Contact
+                    </a>
+                  ) : (
+                    <span className="rounded-lg border border-white/10 px-4 py-2 font-medium text-slate-500">
+                      Email unavailable
+                    </span>
+                  ))}
 
                 {request.status === "pending" && (
                   <>
