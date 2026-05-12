@@ -1,13 +1,7 @@
 import { createElement, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  clearAuthSessionHint,
-  clearFallbackAccessToken,
-  getCurrentUser,
-  loginUser,
-  setFallbackAccessToken,
-} from "../services/authServices";
+import { authenticateUser } from "../services/authServices";
 import {
   getApiErrorMessage,
   getLoginErrorMessage,
@@ -281,70 +275,12 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const loginResponse = await loginUser(formData);
-      const fallbackToken = loginResponse?.data?.data?.accessToken;
+      const user = await authenticateUser(formData);
 
-      try {
-        const currentUserResponse = await getCurrentUser({
-          skipAuthRefresh: true,
-          skipFallbackAuth: true,
-        });
-        const sessionUser = currentUserResponse?.data;
-
-        if (!sessionUser) {
-          throw new Error("Unable to verify your session after login.");
-        }
-
-        clearFallbackAccessToken();
-        setError("");
-        onLoginSuccess(sessionUser);
-        navigate("/projects/explore", { replace: true });
-        return;
-      } catch (sessionError) {
-        if (sessionError?.response?.status === 401 && fallbackToken) {
-          setFallbackAccessToken(fallbackToken);
-
-          try {
-            const fallbackUserResponse = await getCurrentUser({
-              skipAuthRefresh: true,
-            });
-            const fallbackUser = fallbackUserResponse?.data;
-
-            if (!fallbackUser) {
-              throw new Error("Unable to verify fallback login session.");
-            }
-
-            setError("");
-            onLoginSuccess(fallbackUser);
-            navigate("/projects/explore", { replace: true });
-            return;
-          } catch (fallbackError) {
-            clearFallbackAccessToken();
-            clearAuthSessionHint();
-            setError(
-              getApiErrorMessage(
-                fallbackError,
-                "Login succeeded but fallback session could not be established."
-              )
-            );
-            return;
-          }
-        }
-
-        clearFallbackAccessToken();
-        clearAuthSessionHint();
-        setError(
-          sessionError?.response?.status === 401
-            ? "Login succeeded but session cookie was not stored/sent"
-            : getApiErrorMessage(
-                sessionError,
-                "Unable to verify your session after login."
-              )
-        );
-        return;
-      }
+      setError("");
+      onLoginSuccess(user);
+      navigate("/projects/explore", { replace: true });
     } catch (err) {
-      clearFallbackAccessToken();
       setError(
         getLoginErrorMessage(
           err,

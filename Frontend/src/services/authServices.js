@@ -49,8 +49,6 @@ const persistFallbackAccessToken = (token) => {
   }
 };
 
-export const getFallbackAccessToken = () => fallbackAccessToken;
-
 export const setFallbackAccessToken = (token) => {
   persistFallbackAccessToken(token);
 };
@@ -77,10 +75,6 @@ export const setGlobalApiErrorHandler = (handler) => {
       globalApiErrorHandler = null;
     }
   };
-};
-
-export const hasAuthSessionHint = () => {
-  return window.localStorage.getItem(AUTH_SESSION_HINT_KEY) === "true";
 };
 
 export const markAuthSessionKnown = () => {
@@ -145,7 +139,7 @@ const notifyGlobalApiError = (error) => {
 };
 
 API.interceptors.request.use((config) => {
-  const token = getFallbackAccessToken();
+  const token = fallbackAccessToken;
 
   if (!token || config?.skipFallbackAuth || isAuthRouteRequest(config)) {
     return config;
@@ -236,6 +230,58 @@ export const loginUser = async (userData) => {
   const response = await API.post("/users/login", userData);
   markAuthSessionKnown();
   return response;
+};
+
+export const authenticateUser = async (userData) => {
+  clearFallbackAccessToken();
+
+  const loginResponse = await loginUser(userData);
+  const fallbackToken = loginResponse?.data?.data?.accessToken;
+
+  try {
+    const currentUserResponse = await getCurrentUser({
+      skipAuthRefresh: true,
+      skipFallbackAuth: true,
+    });
+    const sessionUser = currentUserResponse?.data;
+
+    if (!sessionUser) {
+      throw new Error("Unable to start your session. Please try again.");
+    }
+
+    return sessionUser;
+  } catch (sessionError) {
+    if (sessionError?.response?.status === 401 && fallbackToken) {
+      try {
+        setFallbackAccessToken(fallbackToken);
+        const fallbackUserResponse = await getCurrentUser({
+          skipAuthRefresh: true,
+        });
+        const fallbackUser = fallbackUserResponse?.data;
+
+        if (!fallbackUser) {
+          throw new Error("Unable to start your session. Please try again.");
+        }
+
+        return fallbackUser;
+      } catch (fallbackError) {
+        clearFallbackAccessToken();
+        clearAuthSessionHint();
+        fallbackError.userMessage =
+          "Unable to start your session. Please try again.";
+        throw fallbackError;
+      }
+    }
+
+    clearFallbackAccessToken();
+    clearAuthSessionHint();
+
+    if (sessionError?.response?.status === 401) {
+      sessionError.userMessage = "Unable to start your session. Please try again.";
+    }
+
+    throw sessionError;
+  }
 };
 
 export const registerUser = async (userData) => {
