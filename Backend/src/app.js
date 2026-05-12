@@ -15,17 +15,13 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [];
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: corsOrigin.includes(",")
+      ? corsOrigin.split(",").map((origin) => origin.trim())
+      : corsOrigin,
     credentials: true,
   })
 );

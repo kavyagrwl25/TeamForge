@@ -10,7 +10,8 @@ import jwt from "jsonwebtoken"
 const baseCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
 };
 
 const accessTokenCookieOptions = {
