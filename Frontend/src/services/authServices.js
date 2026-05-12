@@ -189,7 +189,7 @@ API.interceptors.response.use(
 export const loginUser = async (userData) => {
   const response = await API.post("/users/login", userData);
   markAuthSessionKnown();
-  return response.data;
+  return response;
 };
 
 export const registerUser = async (userData) => {

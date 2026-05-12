@@ -1,8 +1,15 @@
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../services/authServices";
-import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
+import {
+  clearAuthSessionHint,
+  getCurrentUser,
+  loginUser,
+} from "../services/authServices";
+import {
+  getApiErrorMessage,
+  getLoginErrorMessage,
+} from "../utils/apiErrorHelpers";
 
 const featureChips = [
   "Discover projects",
@@ -239,7 +246,7 @@ function AuthCard({ children }) {
   );
 }
 
-function Login({ onLoginSuccess, isAuthenticated, currentUser }) {
+function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
   const isSubmittingRef = useRef(false);
 
@@ -250,17 +257,6 @@ function Login({ onLoginSuccess, isAuthenticated, currentUser }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [shouldNavigateAfterLogin, setShouldNavigateAfterLogin] =
-    useState(false);
-
-  useEffect(() => {
-    if (!shouldNavigateAfterLogin || !isAuthenticated || !currentUser) {
-      return;
-    }
-
-    setShouldNavigateAfterLogin(false);
-    navigate("/projects/explore", { replace: true });
-  }, [shouldNavigateAfterLogin, isAuthenticated, currentUser, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -281,22 +277,54 @@ function Login({ onLoginSuccess, isAuthenticated, currentUser }) {
     isSubmittingRef.current = true;
     setError("");
     setLoading(true);
+    let loginSucceeded = false;
 
     try {
       const loginResponse = await loginUser(formData);
-      const loggedInUser = loginResponse?.data?.user;
+      loginSucceeded = true;
+      console.log("login status", loginResponse?.status ?? null);
 
-      if (!loggedInUser) {
-        throw new Error("Login failed. Please try again.");
+      const currentUserResponse = await getCurrentUser({
+        skipAuthRefresh: true,
+      });
+      console.log("/users/me status", 200);
+
+      const sessionUser = currentUserResponse?.data;
+
+      if (!sessionUser) {
+        console.log("auth user set", false);
+        throw new Error("Unable to verify your session after login.");
       }
 
       setError("");
-      onLoginSuccess(loggedInUser);
-      setShouldNavigateAfterLogin(true);
+      onLoginSuccess(sessionUser);
+      console.log("auth user set", true);
+      navigate("/projects/explore", { replace: true });
       return;
     } catch (err) {
-      setShouldNavigateAfterLogin(false);
-      setError(getLoginErrorMessage(err, "Login failed. Please try again."));
+      const status = err?.response?.status ?? null;
+
+      if (loginSucceeded) {
+        console.log("/users/me status", status);
+        console.log("auth user set", false);
+        clearAuthSessionHint();
+        setError(
+          status === 401
+            ? "Login succeeded but session cookie was not stored/sent"
+            : getApiErrorMessage(
+                err,
+                "Unable to verify your session after login."
+              )
+        );
+      } else {
+        console.log("login status", status);
+        setError(
+          getLoginErrorMessage(
+            err,
+            getApiErrorMessage(err, "Login failed. Please try again.")
+          )
+        );
+      }
     } finally {
       isSubmittingRef.current = false;
       setLoading(false);

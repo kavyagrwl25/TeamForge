@@ -412,11 +412,7 @@ function App() {
               ) : isAuthenticated ? (
                 <Navigate to="/projects/explore" replace />
               ) : (
-                <Login
-                  onLoginSuccess={handleLoginSuccess}
-                  isAuthenticated={isAuthenticated}
-                  currentUser={currentUser}
-                />
+                <Login onLoginSuccess={handleLoginSuccess} />
               )
             }
           />
