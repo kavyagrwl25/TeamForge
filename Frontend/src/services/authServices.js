@@ -186,34 +186,10 @@ API.interceptors.response.use(
   }
 );
 
-export const loginUser = async (userData, requestId) => {
-  try {
-    const response = await API.post("/users/login", userData, {
-      headers: requestId
-        ? {
-            "x-debug-request-id": requestId,
-          }
-        : undefined,
-    });
-
-    console.log("[auth-service][login] response", {
-      requestId,
-      status: response.status,
-      url: `${response.config?.baseURL || ""}${response.config?.url || ""}`,
-    });
-
-    markAuthSessionKnown();
-    return response.data;
-  } catch (error) {
-    console.log("[auth-service][login] error", {
-      requestId,
-      status: error.response?.status,
-      url: `${error.config?.baseURL || ""}${error.config?.url || ""}`,
-      responseData: error.response?.data,
-    });
-
-    throw error;
-  }
+export const loginUser = async (userData) => {
+  const response = await API.post("/users/login", userData);
+  markAuthSessionKnown();
+  return response.data;
 };
 
 export const registerUser = async (userData) => {

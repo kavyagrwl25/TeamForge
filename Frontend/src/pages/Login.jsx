@@ -1,7 +1,7 @@
-import { createElement, useEffect, useRef, useState } from "react";
+import { createElement, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
-import { getCurrentUser, loginUser } from "../services/authServices";
+import { loginUser } from "../services/authServices";
 import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
 
 const featureChips = [
@@ -241,7 +241,6 @@ function AuthCard({ children }) {
 
 function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
-  const activeLoginRequestRef = useRef("");
   const isSubmittingRef = useRef(false);
 
   const [formData, setFormData] = useState({
@@ -252,13 +251,6 @@ function Login({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    console.log("[login] error state updated", {
-      requestId: activeLoginRequestRef.current || window.__lastLoginRequestId || null,
-      error,
-    });
-  }, [error]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -268,100 +260,32 @@ function Login({ onLoginSuccess }) {
     }));
   };
 
-  const createRequestId = () => {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading || isSubmittingRef.current) {
+    if (isSubmittingRef.current) {
       return;
     }
 
-    const requestId = createRequestId();
-    activeLoginRequestRef.current = requestId;
     isSubmittingRef.current = true;
-    window.__lastLoginRequestId = requestId;
-
-    console.log("[login] clearing error before submit", {
-      requestId,
-    });
     setError("");
     setLoading(true);
 
     try {
-      console.log("[login] request start", {
-        requestId,
-        route: "/users/login",
-      });
-      await loginUser(formData, requestId);
-      if (activeLoginRequestRef.current !== requestId) {
-        return;
-      }
+      const loginResponse = await loginUser(formData);
+      const loggedInUser = loginResponse?.data?.user;
 
-      console.log("[login] clearing error after login success", {
-        requestId,
-      });
       setError("");
-      console.log("[login] login request succeeded", {
-        requestId,
-        route: "/users/login",
-      });
-
-      // API call after login: fetch the currently logged-in user from cookies.
-      console.log("[login] current user request start", {
-        requestId,
-        route: "/users/me",
-      });
-      const currentUserResponse = await getCurrentUser();
-      if (activeLoginRequestRef.current !== requestId) {
-        return;
-      }
-
-      console.log("[login] clearing error before auth success handoff", {
-        requestId,
-      });
-      setError("");
-      console.log("[login] current user request succeeded", {
-        requestId,
-        route: "/users/me",
-        success: currentUserResponse?.success,
-      });
-      onLoginSuccess(currentUserResponse.data, requestId);
-      console.log("[login] onLoginSuccess invoked", {
-        requestId,
-      });
+      onLoginSuccess(loggedInUser);
 
       // Redirect after login to the main Explore Projects screen.
-      console.log("[login] navigate called", {
-        requestId,
-        destination: "/projects/explore",
-      });
       navigate("/projects/explore", { replace: true });
       return;
     } catch (err) {
-      if (activeLoginRequestRef.current !== requestId) {
-        return;
-      }
-
-      console.log("[login] request failed", {
-        requestId,
-        route: err?.config?.url || err?.request?.responseURL || "unknown",
-        status: err?.response?.status,
-        responseData: err?.response?.data,
-      });
-      const nextError = getLoginErrorMessage(err, "Login failed. Please try again.");
-      console.log("[login] setError called", {
-        requestId,
-        message: nextError,
-      });
-      setError(nextError);
+      setError(getLoginErrorMessage(err, "Login failed. Please try again."));
     } finally {
-      if (activeLoginRequestRef.current === requestId) {
-        isSubmittingRef.current = false;
-        setLoading(false);
-      }
+      isSubmittingRef.current = false;
+      setLoading(false);
     }
   };
 

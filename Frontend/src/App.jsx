@@ -59,7 +59,6 @@ function App() {
   const [markAllNotificationsLoading, setMarkAllNotificationsLoading] =
     useState(false);
   const [notificationToast, setNotificationToast] = useState(null);
-  const [lastLoginRequestId, setLastLoginRequestId] = useState(null);
   const resetNotificationState = () => {
     setNotifications([]);
     setNotificationsError(null);
@@ -123,21 +122,10 @@ function App() {
         // Protected route handling: protected pages use the normal auth check.
         // If access token is expired, the axios interceptor may refresh it.
         const response = await checkAuthService();
-        console.log("[app] protected auth check succeeded", {
-          requestId: window.__lastLoginRequestId || lastLoginRequestId,
-          path: location.pathname,
-          success: response?.success,
-        });
         setCurrentUser(response.data);
         markAuthSessionKnown();
         setIsAuthenticated(true);
       } catch (error) {
-        console.log("[app] protected auth check failed", {
-          requestId: window.__lastLoginRequestId || lastLoginRequestId,
-          path: location.pathname,
-          status: error?.response?.status,
-          responseData: error?.response?.data,
-        });
         if (isRateLimitError(error)) {
           setIsAuthenticated(true);
           return;
@@ -268,19 +256,6 @@ function App() {
     };
   }, [currentUser?._id]);
 
-  useEffect(() => {
-    if (!lastLoginRequestId) {
-      return;
-    }
-
-    console.log("[app] auth state updated", {
-      requestId: lastLoginRequestId,
-      isAuthenticated,
-      currentUserId: currentUser?._id || null,
-      currentPath: location.pathname,
-    });
-  }, [currentUser, isAuthenticated, lastLoginRequestId, location.pathname]);
-
   const unreadNotificationCount = notifications.reduce(
     (count, notification) => (notification?.isRead ? count : count + 1),
     0
@@ -375,20 +350,10 @@ function App() {
     }
   };
 
-  const handleLoginSuccess = (user, requestId) => {
-    console.log("[app] handleLoginSuccess executed", {
-      requestId,
-      userId: user?._id || null,
-    });
-    setLastLoginRequestId(requestId || null);
+  const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     markAuthSessionKnown();
     setIsAuthenticated(true);
-    console.log("[app] auth state scheduled", {
-      requestId,
-      nextIsAuthenticated: true,
-      nextUserId: user?._id || null,
-    });
   };
 
   const handleLogout = () => {
