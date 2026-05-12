@@ -1,4 +1,4 @@
-import { createElement, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authServices";
@@ -239,7 +239,7 @@ function AuthCard({ children }) {
   );
 }
 
-function Login({ onLoginSuccess }) {
+function Login({ onLoginSuccess, isAuthenticated, currentUser }) {
   const navigate = useNavigate();
   const isSubmittingRef = useRef(false);
 
@@ -250,6 +250,17 @@ function Login({ onLoginSuccess }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [shouldNavigateAfterLogin, setShouldNavigateAfterLogin] =
+    useState(false);
+
+  useEffect(() => {
+    if (!shouldNavigateAfterLogin || !isAuthenticated || !currentUser) {
+      return;
+    }
+
+    setShouldNavigateAfterLogin(false);
+    navigate("/projects/explore", { replace: true });
+  }, [shouldNavigateAfterLogin, isAuthenticated, currentUser, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -275,13 +286,16 @@ function Login({ onLoginSuccess }) {
       const loginResponse = await loginUser(formData);
       const loggedInUser = loginResponse?.data?.user;
 
+      if (!loggedInUser) {
+        throw new Error("Login failed. Please try again.");
+      }
+
       setError("");
       onLoginSuccess(loggedInUser);
-
-      // Redirect after login to the main Explore Projects screen.
-      navigate("/projects/explore", { replace: true });
+      setShouldNavigateAfterLogin(true);
       return;
     } catch (err) {
+      setShouldNavigateAfterLogin(false);
       setError(getLoginErrorMessage(err, "Login failed. Please try again."));
     } finally {
       isSubmittingRef.current = false;

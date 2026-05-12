@@ -24,7 +24,6 @@ import {
   checkAuth as checkAuthService,
   checkPublicAuth,
   clearAuthSessionHint,
-  hasAuthSessionHint,
   markAuthSessionKnown,
   setAuthFailureHandler,
   setGlobalApiErrorHandler,
@@ -46,9 +45,8 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    publicRoutes.includes(window.location.pathname) ? false : null
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [apiFeedback, setApiFeedback] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -72,6 +70,7 @@ function App() {
     const removeAuthFailureHandler = setAuthFailureHandler(() => {
       setCurrentUser(null);
       setIsAuthenticated(false);
+      setAuthLoading(false);
       resetNotificationState();
       clearAuthSessionHint();
       navigate("/login", { replace: true });
@@ -80,71 +79,37 @@ function App() {
       setApiFeedback(payload);
     });
 
-    const checkUserSession = async () => {
-      if (publicRoutes.includes(location.pathname)) {
-        setIsAuthenticated(false);
-
-        if (!hasAuthSessionHint()) {
-          // Public route handling: first-time visitors should see /login or
-          // /register immediately. With no frontend session hint, we skip
-          // /users/me entirely to avoid noisy logged-out 401 responses.
-          setCurrentUser(null);
-          return;
-        }
-
-        try {
-          // Public route handling: /login and /register are allowed to load
-          // without a valid session. This quiet check only redirects users who
-          // are already authenticated, and it never calls refresh-tokens.
-          const response = await checkPublicAuth();
-          setCurrentUser(response.data);
-          markAuthSessionKnown();
-          setIsAuthenticated(true);
-        } catch (error) {
-          if (isRateLimitError(error)) {
-            return;
-          }
-
-          // A 401 here usually means "visitor is not logged in", which is
-          // normal on public pages and should not be treated as a fatal error.
-          setCurrentUser(null);
-          setIsAuthenticated(false);
-          resetNotificationState();
-          clearAuthSessionHint();
-        }
-
-        return;
-      }
-
-      setIsAuthenticated(null);
-
+    const hydrateAuth = async () => {
+      setAuthLoading(true);
       try {
-        // Protected route handling: protected pages use the normal auth check.
-        // If access token is expired, the axios interceptor may refresh it.
-        const response = await checkAuthService();
+        const response = publicRoutes.includes(window.location.pathname)
+          ? await checkPublicAuth()
+          : await checkAuthService();
+
         setCurrentUser(response.data);
         markAuthSessionKnown();
         setIsAuthenticated(true);
       } catch (error) {
         if (isRateLimitError(error)) {
-          setIsAuthenticated(true);
-          return;
+          setIsAuthenticated(Boolean(currentUser));
+        } else {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          resetNotificationState();
+          clearAuthSessionHint();
         }
-
-        setCurrentUser(null);
-        setIsAuthenticated(false);
-        resetNotificationState();
-        clearAuthSessionHint();
+      } finally {
+        setAuthLoading(false);
       }
     };
 
-    checkUserSession();
+    hydrateAuth();
 
     return () => {
       removeAuthFailureHandler();
       removeGlobalApiErrorHandler();
     };
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     if (!apiFeedback) {
@@ -354,6 +319,7 @@ function App() {
     setCurrentUser(user);
     markAuthSessionKnown();
     setIsAuthenticated(true);
+    setAuthLoading(false);
   };
 
   const handleLogout = () => {
@@ -361,13 +327,14 @@ function App() {
     resetNotificationState();
     clearAuthSessionHint();
     setIsAuthenticated(false);
+    setAuthLoading(false);
   };
 
   const handleProfileUpdated = (user) => {
     setCurrentUser(user);
   };
 
-  if (!isPublicRoute && isAuthenticated === null) {
+  if (!isPublicRoute && authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] text-slate-300">
         Checking your session...
@@ -438,10 +405,18 @@ function App() {
           <Route
             path="/login"
             element={
-              isAuthenticated ? (
+              authLoading ? (
+                <div className="flex min-h-screen items-center justify-center text-slate-300">
+                  Checking your session...
+                </div>
+              ) : isAuthenticated ? (
                 <Navigate to="/projects/explore" replace />
               ) : (
-                <Login onLoginSuccess={handleLoginSuccess} />
+                <Login
+                  onLoginSuccess={handleLoginSuccess}
+                  isAuthenticated={isAuthenticated}
+                  currentUser={currentUser}
+                />
               )
             }
           />
@@ -449,7 +424,11 @@ function App() {
           <Route
             path="/register"
             element={
-              isAuthenticated ? (
+              authLoading ? (
+                <div className="flex min-h-screen items-center justify-center text-slate-300">
+                  Checking your session...
+                </div>
+              ) : isAuthenticated ? (
                 <Navigate to="/projects/explore" replace />
               ) : (
                 <Register />
@@ -459,7 +438,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <Navigate to="/projects/explore" replace />
               </ProtectedRoute>
             }
@@ -467,7 +446,7 @@ function App() {
           <Route
             path="/change-password"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <ChangePassword />
               </ProtectedRoute>
             }
@@ -475,7 +454,7 @@ function App() {
           <Route
             path="/projects/me"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <MyProjects />
               </ProtectedRoute>
             }
@@ -483,7 +462,7 @@ function App() {
           <Route
             path="/projects/explore"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <ExploreProjects />
               </ProtectedRoute>
             }
@@ -491,7 +470,7 @@ function App() {
           <Route
             path="/projects/create"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <CreateProject />
               </ProtectedRoute>
             }
@@ -499,7 +478,7 @@ function App() {
           <Route
             path="/projects/:projectId/edit"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <EditProject />
               </ProtectedRoute>
             }
@@ -507,7 +486,7 @@ function App() {
           <Route
             path="/requests/me"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <MySentRequests />
               </ProtectedRoute>
             }
@@ -515,7 +494,7 @@ function App() {
           <Route
             path="/projects/:projectId/requests"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <ProjectRequests />
               </ProtectedRoute>
             }
@@ -523,7 +502,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <Profile currentUser={currentUser} />
               </ProtectedRoute>
             }
@@ -531,7 +510,7 @@ function App() {
           <Route
             path="/profile/edit"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <Settings
                   onAccountDeleted={handleLogout}
                   onProfileUpdated={handleProfileUpdated}
@@ -542,7 +521,7 @@ function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isLoading={authLoading} user={currentUser}>
                 <Settings
                   onAccountDeleted={handleLogout}
                   onProfileUpdated={handleProfileUpdated}
