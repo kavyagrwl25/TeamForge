@@ -1,4 +1,4 @@
-import { createElement, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
@@ -252,6 +252,13 @@ function Login({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    console.log("[login] error state updated", {
+      requestId: activeLoginRequestRef.current || window.__lastLoginRequestId || null,
+      error,
+    });
+  }, [error]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -275,7 +282,11 @@ function Login({ onLoginSuccess }) {
     const requestId = createRequestId();
     activeLoginRequestRef.current = requestId;
     isSubmittingRef.current = true;
+    window.__lastLoginRequestId = requestId;
 
+    console.log("[login] clearing error before submit", {
+      requestId,
+    });
     setError("");
     setLoading(true);
 
@@ -289,6 +300,9 @@ function Login({ onLoginSuccess }) {
         return;
       }
 
+      console.log("[login] clearing error after login success", {
+        requestId,
+      });
       setError("");
       console.log("[login] login request succeeded", {
         requestId,
@@ -305,15 +319,25 @@ function Login({ onLoginSuccess }) {
         return;
       }
 
+      console.log("[login] clearing error before auth success handoff", {
+        requestId,
+      });
       setError("");
       console.log("[login] current user request succeeded", {
         requestId,
         route: "/users/me",
         success: currentUserResponse?.success,
       });
-      onLoginSuccess(currentUserResponse.data);
+      onLoginSuccess(currentUserResponse.data, requestId);
+      console.log("[login] onLoginSuccess invoked", {
+        requestId,
+      });
 
       // Redirect after login to the main Explore Projects screen.
+      console.log("[login] navigate called", {
+        requestId,
+        destination: "/projects/explore",
+      });
       navigate("/projects/explore", { replace: true });
       return;
     } catch (err) {
@@ -327,7 +351,12 @@ function Login({ onLoginSuccess }) {
         status: err?.response?.status,
         responseData: err?.response?.data,
       });
-      setError(getLoginErrorMessage(err, "Login failed. Please try again."));
+      const nextError = getLoginErrorMessage(err, "Login failed. Please try again.");
+      console.log("[login] setError called", {
+        requestId,
+        message: nextError,
+      });
+      setError(nextError);
     } finally {
       if (activeLoginRequestRef.current === requestId) {
         isSubmittingRef.current = false;

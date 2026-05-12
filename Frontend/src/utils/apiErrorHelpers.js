@@ -64,6 +64,15 @@ export const getLoginErrorMessage = (
   const status = error?.response?.status;
 
   if (status === 401) {
+    console.log("[login-error] returning invalid login message", {
+      requestId:
+        error?.config?.headers?.["x-debug-request-id"] ||
+        error?.config?.headers?.["X-Debug-Request-Id"] ||
+        window.__lastLoginRequestId ||
+        null,
+      route: error?.config?.url || error?.request?.responseURL || "unknown",
+      status,
+    });
     return INVALID_LOGIN_MESSAGE;
   }
 
