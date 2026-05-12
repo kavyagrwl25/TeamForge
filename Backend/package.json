@@ -14,18 +14,15 @@
   "author": "Kavya Agrawal",
   "type": "module",
   "main": "src/server.js",
-
   "engines": {
     "node": ">=18"
   },
-
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed:projects": "node scripts/seedProjects.js",
     "seed:requests": "node scripts/seedRequests.js"
   },
-
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -35,10 +32,8 @@
     "express-rate-limit": "^8.4.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.3",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io": "^4.8.3"
   },
-
   "devDependencies": {
     "nodemon": "^3.1.14"
   }
