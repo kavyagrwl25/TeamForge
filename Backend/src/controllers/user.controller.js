@@ -103,6 +103,9 @@ const login = AsyncHandler(async (req, res) => {
     }
     const { accessToken, refreshToken } = await generateTokens(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    const loginResponseData = isProduction
+        ? { user: loggedInUser, accessToken }
+        : { user: loggedInUser }
 
     return res
         .status(200)
@@ -111,7 +114,7 @@ const login = AsyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { user: loggedInUser },
+                loginResponseData,
                 "Login successful"
             )
         )

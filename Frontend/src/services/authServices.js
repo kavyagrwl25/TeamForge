@@ -9,6 +9,11 @@ import {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
 const AUTH_SESSION_HINT_KEY = "teamforge_has_session";
+const FALLBACK_ACCESS_TOKEN_KEY = "teamforge_access_token";
+let fallbackAccessToken =
+  typeof window !== "undefined"
+    ? window.localStorage.getItem(FALLBACK_ACCESS_TOKEN_KEY) || ""
+    : "";
 let refreshRequest = null;
 let authFailureHandler = null;
 let globalApiErrorHandler = null;
@@ -29,6 +34,30 @@ const refreshAPI = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
+
+const persistFallbackAccessToken = (token) => {
+  fallbackAccessToken = token || "";
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (fallbackAccessToken) {
+    window.localStorage.setItem(FALLBACK_ACCESS_TOKEN_KEY, fallbackAccessToken);
+  } else {
+    window.localStorage.removeItem(FALLBACK_ACCESS_TOKEN_KEY);
+  }
+};
+
+export const getFallbackAccessToken = () => fallbackAccessToken;
+
+export const setFallbackAccessToken = (token) => {
+  persistFallbackAccessToken(token);
+};
+
+export const clearFallbackAccessToken = () => {
+  persistFallbackAccessToken("");
+};
 
 export const setAuthFailureHandler = (handler) => {
   authFailureHandler = handler;
@@ -115,6 +144,22 @@ const notifyGlobalApiError = (error) => {
   });
 };
 
+API.interceptors.request.use((config) => {
+  const token = getFallbackAccessToken();
+
+  if (!token || config?.skipFallbackAuth || isAuthRouteRequest(config)) {
+    return config;
+  }
+
+  config.headers = config.headers || {};
+
+  if (!config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -173,6 +218,7 @@ API.interceptors.response.use(
 
       // Refresh failure means both cookies are no longer usable. Clear frontend
       // auth state through App.jsx, then send the user back to login.
+      clearFallbackAccessToken();
       clearAuthSessionHint();
 
       if (authFailureHandler) {
@@ -198,9 +244,13 @@ export const registerUser = async (userData) => {
 };
 
 export const logoutUser = async () => {
-  const response = await API.post("/users/logout");
-  clearAuthSessionHint();
-  return response.data;
+  try {
+    const response = await API.post("/users/logout");
+    return response.data;
+  } finally {
+    clearFallbackAccessToken();
+    clearAuthSessionHint();
+  }
 };
 
 export const changePassword = async (passwordData) => {

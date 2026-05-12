@@ -24,6 +24,7 @@ import {
   checkAuth as checkAuthService,
   checkPublicAuth,
   clearAuthSessionHint,
+  clearFallbackAccessToken,
   markAuthSessionKnown,
   setAuthFailureHandler,
   setGlobalApiErrorHandler,
@@ -72,6 +73,7 @@ function App() {
       setIsAuthenticated(false);
       setAuthLoading(false);
       resetNotificationState();
+      clearFallbackAccessToken();
       clearAuthSessionHint();
       navigate("/login", { replace: true });
     });
@@ -96,6 +98,7 @@ function App() {
           setCurrentUser(null);
           setIsAuthenticated(false);
           resetNotificationState();
+          clearFallbackAccessToken();
           clearAuthSessionHint();
         }
       } finally {
@@ -325,6 +328,7 @@ function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     resetNotificationState();
+    clearFallbackAccessToken();
     clearAuthSessionHint();
     setIsAuthenticated(false);
     setAuthLoading(false);
