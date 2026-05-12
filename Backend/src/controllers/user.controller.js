@@ -78,22 +78,57 @@ const register = AsyncHandler( async (req, res) => {
 const login = AsyncHandler(async (req, res) => {
     const { email, password } = req.body
     const normalizedEmail = email?.trim().toLowerCase()
+    console.log("[auth][login] request metadata", {
+        origin: req.headers.origin,
+        userAgent: req.headers["user-agent"],
+        bodyKeys: Object.keys(req.body || {}),
+        emailReceived: email,
+        normalizedEmail,
+        passwordLength: password?.length ?? 0,
+    })
     if (!isValidEmail(normalizedEmail)) {
+        console.log("[auth][login] response", {
+            status: 400,
+            message: "Please use a valid email",
+        })
         throw new ApiError(400, "Please use a valid email")
     }
     if (!isValidPassword(password)) {
+        console.log("[auth][login] response", {
+            status: 400,
+            message: "Please enter a valid password",
+        })
         throw new ApiError(400, "Please enter a valid password")
     }
     const user = await User.findOne({ email: normalizedEmail })
+    console.log("[auth][login] user lookup", {
+        emailQueried: normalizedEmail,
+        userFound: !!user,
+    })
     if (!user) {
+        console.log("[auth][login] response", {
+            status: 401,
+            message: "Invalid credentials",
+        })
         throw new ApiError(401, "Invalid credentials")
     }
     const isPasswordCorrect = await user.isPasswordCorrect(password)
+    console.log("[auth][login] password comparison", {
+        passwordMatched: isPasswordCorrect,
+    })
     if (!isPasswordCorrect) {
+        console.log("[auth][login] response", {
+            status: 401,
+            message: "Invalid credentials",
+        })
         throw new ApiError(401, "Invalid credentials")
     }
     const { accessToken, refreshToken } = await generateTokens(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    console.log("[auth][login] response", {
+        status: 200,
+        message: "Login successful",
+    })
 
     return res
         .status(200)

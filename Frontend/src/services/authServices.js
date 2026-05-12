@@ -30,6 +30,49 @@ const refreshAPI = axios.create({
   withCredentials: true,
 });
 
+const attachDebugLogging = (client, label) => {
+  client.interceptors.request.use(
+    (config) => {
+      const requestUrl = `${config.baseURL || ""}${config.url || ""}`;
+      const method = (config.method || "get").toUpperCase();
+      const withCredentials =
+        config.withCredentials ?? client.defaults.withCredentials ?? false;
+
+      console.log(`[auth-service][${label}] request`, {
+        method,
+        url: requestUrl,
+        withCredentials,
+      });
+
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  client.interceptors.response.use(
+    (response) => {
+      console.log(`[auth-service][${label}] response`, {
+        status: response.status,
+        url: `${response.config?.baseURL || ""}${response.config?.url || ""}`,
+      });
+
+      return response;
+    },
+    (error) => {
+      console.log(`[auth-service][${label}] error`, {
+        status: error.response?.status,
+        url: `${error.config?.baseURL || ""}${error.config?.url || ""}`,
+        responseData: error.response?.data,
+      });
+
+      return Promise.reject(error);
+    }
+  );
+};
+
+attachDebugLogging(API, "api");
+attachDebugLogging(refreshAPI, "refresh");
+
 export const setAuthFailureHandler = (handler) => {
   authFailureHandler = handler;
 
@@ -187,6 +230,11 @@ API.interceptors.response.use(
 );
 
 export const loginUser = async (userData) => {
+  console.log("[auth-service][loginUser] payload", {
+    keys: Object.keys(userData || {}),
+    email: userData?.email,
+    passwordLength: userData?.password?.length ?? 0,
+  });
   const response = await API.post("/users/login", userData);
   markAuthSessionKnown();
   return response.data;

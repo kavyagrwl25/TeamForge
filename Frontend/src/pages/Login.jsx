@@ -4,6 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
 import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
 
+const LOGIN_API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
+
 const featureChips = [
   "Discover projects",
   "Find skilled teammates",
@@ -268,6 +271,12 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
+      console.log("[login-form] submitting login", {
+        apiBaseUrl: LOGIN_API_BASE_URL,
+        email: formData.email,
+        passwordLength: formData.password?.length ?? 0,
+        payloadKeys: Object.keys(formData),
+      });
       await loginUser(formData);
 
       // API call after login: fetch the currently logged-in user from cookies.
