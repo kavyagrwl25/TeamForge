@@ -8,26 +8,23 @@ import { initSocket, addUserSocket, removeUserSocket } from "./socket.js";
 import connectDb from "./config/dbConnection.js";
 
 const PORT = process.env.PORT || 4000;
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [];
 
 const startServer = async () => {
   try {
     await connectDb();
 
-    // Create HTTP server using Express app
     const server = http.createServer(app);
 
-    // Attach Socket.IO to HTTP server
     const io = new Server(server, {
       cors: {
-        origin: process.env.CORS_ORIGIN,
+        origin: allowedOrigins,
         credentials: true,
       },
     });
 
-    // Store io globally
     initSocket(io);
 
-    // Handle socket connections
     io.on("connection", (socket) => {
       const userId = socket.handshake.auth?.userId;
 
@@ -44,13 +41,11 @@ const startServer = async () => {
       });
     });
 
-    // Start server
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-
   } catch (err) {
-    console.log("MongoDb connection failed:", err);
+    console.error("Server startup failed:", err);
     process.exit(1);
   }
 };
