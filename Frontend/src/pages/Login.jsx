@@ -241,7 +241,7 @@ function AuthCard({ children }) {
 
 function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
-  const activeLoginRequestRef = useRef(0);
+  const activeLoginRequestRef = useRef("");
   const isSubmittingRef = useRef(false);
 
   const [formData, setFormData] = useState({
@@ -261,6 +261,10 @@ function Login({ onLoginSuccess }) {
     }));
   };
 
+  const createRequestId = () => {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -268,7 +272,7 @@ function Login({ onLoginSuccess }) {
       return;
     }
 
-    const requestId = activeLoginRequestRef.current + 1;
+    const requestId = createRequestId();
     activeLoginRequestRef.current = requestId;
     isSubmittingRef.current = true;
 
@@ -276,20 +280,37 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      await loginUser(formData);
+      console.log("[login] request start", {
+        requestId,
+        route: "/users/login",
+      });
+      await loginUser(formData, requestId);
       if (activeLoginRequestRef.current !== requestId) {
         return;
       }
 
       setError("");
+      console.log("[login] login request succeeded", {
+        requestId,
+        route: "/users/login",
+      });
 
       // API call after login: fetch the currently logged-in user from cookies.
+      console.log("[login] current user request start", {
+        requestId,
+        route: "/users/me",
+      });
       const currentUserResponse = await getCurrentUser();
       if (activeLoginRequestRef.current !== requestId) {
         return;
       }
 
       setError("");
+      console.log("[login] current user request succeeded", {
+        requestId,
+        route: "/users/me",
+        success: currentUserResponse?.success,
+      });
       onLoginSuccess(currentUserResponse.data);
 
       // Redirect after login to the main Explore Projects screen.
@@ -300,6 +321,12 @@ function Login({ onLoginSuccess }) {
         return;
       }
 
+      console.log("[login] request failed", {
+        requestId,
+        route: err?.config?.url || err?.request?.responseURL || "unknown",
+        status: err?.response?.status,
+        responseData: err?.response?.data,
+      });
       setError(getLoginErrorMessage(err, "Login failed. Please try again."));
     } finally {
       if (activeLoginRequestRef.current === requestId) {

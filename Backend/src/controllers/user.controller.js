@@ -78,22 +78,53 @@ const register = AsyncHandler( async (req, res) => {
 const login = AsyncHandler(async (req, res) => {
     const { email, password } = req.body
     const normalizedEmail = email?.trim().toLowerCase()
+    const requestId = req.headers["x-debug-request-id"] || "missing-request-id"
+
+    console.log("[auth][login] request received", {
+        requestId,
+    })
     if (!isValidEmail(normalizedEmail)) {
+        console.log("[auth][login] response", {
+            requestId,
+            status: 400,
+            message: "Please use a valid email",
+        })
         throw new ApiError(400, "Please use a valid email")
     }
     if (!isValidPassword(password)) {
+        console.log("[auth][login] response", {
+            requestId,
+            status: 400,
+            message: "Please enter a valid password",
+        })
         throw new ApiError(400, "Please enter a valid password")
     }
     const user = await User.findOne({ email: normalizedEmail })
     if (!user) {
+        console.log("[auth][login] response", {
+            requestId,
+            status: 401,
+            message: "Invalid credentials",
+        })
         throw new ApiError(401, "Invalid credentials")
     }
     const isPasswordCorrect = await user.isPasswordCorrect(password)
     if (!isPasswordCorrect) {
+        console.log("[auth][login] response", {
+            requestId,
+            status: 401,
+            message: "Invalid credentials",
+        })
         throw new ApiError(401, "Invalid credentials")
     }
     const { accessToken, refreshToken } = await generateTokens(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    console.log("[auth][login] response", {
+        requestId,
+        status: 200,
+        message: "Login successful",
+    })
 
     return res
         .status(200)
