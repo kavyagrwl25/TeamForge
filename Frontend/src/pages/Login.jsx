@@ -1,13 +1,8 @@
-import { createElement, useState } from "react";
+import { createElement, useRef, useState } from "react";
 import ErrorAlert from "../components/ErrorAlert";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, loginUser } from "../services/authServices";
 import { getLoginErrorMessage } from "../utils/apiErrorHelpers";
-
-const LOGIN_API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api/v1";
-const SHOW_AUTH_DEBUG_PANEL =
-  import.meta.env.DEV || window.localStorage.getItem("debugAuth") === "true";
 
 const featureChips = [
   "Discover projects",
@@ -244,33 +239,10 @@ function AuthCard({ children }) {
   );
 }
 
-function AuthDebugPanel({ visible, entries }) {
-  if (!visible) {
-    return null;
-  }
-
-  return (
-    <div className="fixed bottom-3 left-3 right-3 z-50 rounded-2xl border border-amber-300/25 bg-slate-950/90 p-3 text-left text-xs text-slate-100 shadow-2xl shadow-slate-950/60 backdrop-blur-xl sm:left-auto sm:right-4 sm:w-full sm:max-w-md">
-      <p className="font-semibold uppercase tracking-[0.16em] text-amber-200">
-        Auth Debug
-      </p>
-      <div className="mt-2 space-y-2">
-        {entries.map((entry, index) => (
-          <div
-            key={`${entry.label}-${index}`}
-            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2"
-          >
-            <p className="font-medium text-cyan-100">{entry.label}</p>
-            <p className="mt-1 break-words text-slate-300">{entry.value}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
+  const activeLoginRequestRef = useRef(0);
+  const isSubmittingRef = useRef(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -279,25 +251,6 @@ function Login({ onLoginSuccess }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [debugInfo, setDebugInfo] = useState({
-    apiBaseUrl: LOGIN_API_BASE_URL,
-    loginRequestStarted: "No",
-    loginResponseStatus: "Not started",
-    currentUserStatus: "Not started",
-    errorMessage: "None",
-  });
-
-  const updateDebugInfo = (updates) => {
-    if (!SHOW_AUTH_DEBUG_PANEL) {
-      return;
-    }
-
-    setDebugInfo((prev) => ({
-      ...prev,
-      ...updates,
-    }));
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -311,69 +264,48 @@ function Login({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (loading || isSubmittingRef.current) {
+      return;
+    }
+
+    const requestId = activeLoginRequestRef.current + 1;
+    activeLoginRequestRef.current = requestId;
+    isSubmittingRef.current = true;
+
     setError("");
-    setSuccess("");
     setLoading(true);
-    updateDebugInfo({
-      apiBaseUrl: LOGIN_API_BASE_URL,
-      loginRequestStarted: "Yes",
-      loginResponseStatus: "Pending",
-      currentUserStatus: "Pending",
-      errorMessage: "None",
-    });
 
     try {
-      console.log("[login-form] submitting login", {
-        apiBaseUrl: LOGIN_API_BASE_URL,
-        email: formData.email,
-        passwordLength: formData.password?.length ?? 0,
-        payloadKeys: Object.keys(formData),
-      });
       await loginUser(formData);
-      updateDebugInfo({
-        loginResponseStatus: "Success (200)",
-      });
+      if (activeLoginRequestRef.current !== requestId) {
+        return;
+      }
+
+      setError("");
 
       // API call after login: fetch the currently logged-in user from cookies.
       const currentUserResponse = await getCurrentUser();
-      updateDebugInfo({
-        currentUserStatus: currentUserResponse?.success
-          ? "Success"
-          : "Completed without success flag",
-      });
-      onLoginSuccess(currentUserResponse.data);
-      setSuccess("Login successful. Opening your projects...");
+      if (activeLoginRequestRef.current !== requestId) {
+        return;
+      }
 
-      // reset form
-      setFormData({
-        email: "",
-        password: "",
-      });
+      setError("");
+      onLoginSuccess(currentUserResponse.data);
 
       // Redirect after login to the main Explore Projects screen.
       navigate("/projects/explore", { replace: true });
+      return;
     } catch (err) {
-      const loginErrorMessage = getLoginErrorMessage(
-        err,
-        "Login failed. Please try again."
-      );
-      const failedRequestUrl =
-        err?.config?.url || err?.request?.responseURL || "";
+      if (activeLoginRequestRef.current !== requestId) {
+        return;
+      }
 
-      updateDebugInfo({
-        loginResponseStatus:
-          err?.response?.status !== undefined
-            ? `Error (${err.response.status})`
-            : "Request failed before response",
-        currentUserStatus:
-          failedRequestUrl.includes("/users/me")
-            ? "Failed"
-            : "Not reached",
-        errorMessage: loginErrorMessage,
-      });
-      setError(loginErrorMessage);
+      setError(getLoginErrorMessage(err, "Login failed. Please try again."));
     } finally {
-      setLoading(false);
+      if (activeLoginRequestRef.current === requestId) {
+        isSubmittingRef.current = false;
+        setLoading(false);
+      }
     }
   };
 
@@ -461,12 +393,6 @@ function Login({ onLoginSuccess }) {
                     Checking your credentials...
                   </div>
                 )}
-
-                {!error && success && (
-                  <div className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-                    {success}
-                  </div>
-                )}
               </div>
 
               <button
@@ -491,16 +417,6 @@ function Login({ onLoginSuccess }) {
           </AuthCard>
         </section>
       </div>
-      <AuthDebugPanel
-        visible={SHOW_AUTH_DEBUG_PANEL}
-        entries={[
-          { label: "API Base URL", value: debugInfo.apiBaseUrl },
-          { label: "Login Request Started", value: debugInfo.loginRequestStarted },
-          { label: "Login Response Status", value: debugInfo.loginResponseStatus },
-          { label: "/users/me Status", value: debugInfo.currentUserStatus },
-          { label: "Error", value: debugInfo.errorMessage },
-        ]}
-      />
     </div>
   );
 }
