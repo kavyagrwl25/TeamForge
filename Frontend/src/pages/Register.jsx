@@ -71,6 +71,9 @@ function Register() {
           <input
             type="text"
             name="fullName"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Full name"
             value={formData.fullName}
             onChange={handleChange}
@@ -81,6 +84,9 @@ function Register() {
           <input
             type="text"
             name="userName"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Username"
             value={formData.userName}
             onChange={handleChange}
@@ -91,6 +97,9 @@ function Register() {
           <input
             type="email"
             name="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
@@ -101,6 +110,9 @@ function Register() {
           <input
             type="password"
             name="password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}

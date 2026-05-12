@@ -174,6 +174,9 @@ function TextInput({ icon, id, label, className = "", ...props }) {
         })}
         <input
           id={id}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           className={`w-full rounded-xl border border-white/10 bg-slate-950/65 px-4 py-3 pl-12 text-slate-100 shadow-inner shadow-slate-950/30 outline-none transition placeholder:text-slate-500 hover:border-white/20 focus:border-cyan-300/70 focus:bg-slate-950/80 focus:ring-4 focus:ring-cyan-300/15 ${className}`}
           {...props}
         />
@@ -196,6 +199,9 @@ function PasswordInput({ id, label, value, onChange, disabled }) {
           id={id}
           type={showPassword ? "text" : "password"}
           name="password"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           autoComplete="current-password"
           placeholder="Enter your password"
           value={value}

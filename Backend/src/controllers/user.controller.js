@@ -41,28 +41,29 @@ const generateTokens =  async(userId) => {
 
 const register = AsyncHandler( async (req, res) => {
     const { fullName, userName, email, password } = req.body 
+    const normalizedEmail = email?.trim().toLowerCase()
     if(!isValidFullName(fullName)){
         throw new ApiError(400, "Full name is required, Please enter valid full name")
     }
     if(!isValidUserName(userName)){
         throw new ApiError(400, "User name is required, Please enter valid user name")
     }
-    if(!isValidEmail(email)){
+    if(!isValidEmail(normalizedEmail)){
         throw new ApiError(400, "Email is required, Please enter valid email")
     }
     if(!isValidPassword(password)){
         throw new ApiError(400, "Password is required, Please enter valid password")
     }
-    const existingUser = await User.findOne({ $or: [{ email }, { userName }] })
+    const existingUser = await User.findOne({ $or: [{ email: normalizedEmail }, { userName }] })
     if(existingUser){
-        if(existingUser.email === email){
+        if(existingUser.email === normalizedEmail){
             throw new ApiError(409, "Email already in use, Please login or use different email")
         }
         if(existingUser.userName === userName){
             throw new ApiError(409, "User name already in use, Please choose a different user name")
         }
     }
-    const userCreated = await User.create({ fullName, userName, email, password })
+    const userCreated = await User.create({ fullName, userName, email: normalizedEmail, password })
     const userData = await User.findById(userCreated._id).select("-password -refreshToken") // exclude sensitive fields
 
     return res
@@ -73,17 +74,24 @@ const register = AsyncHandler( async (req, res) => {
 
 const login = AsyncHandler(async (req, res) => {
     const { email, password } = req.body
-    if (!isValidEmail(email)) {
+    const normalizedEmail = email?.trim().toLowerCase()
+    if (!isValidEmail(normalizedEmail)) {
         throw new ApiError(400, "Please use a valid email")
     }
     if (!isValidPassword(password)) {
         throw new ApiError(400, "Please enter a valid password")
     }
-    const user = await User.findOne({ email })
+    console.log("Login attempt:", {
+        email: normalizedEmail,
+        passwordLength: password?.length,
+    })
+    const user = await User.findOne({ email: normalizedEmail })
+    console.log("User found:", !!user)
     if (!user) {
         throw new ApiError(401, "Invalid credentials")
     }
     const isPasswordCorrect = await user.isPasswordCorrect(password)
+    console.log("Password matched:", isPasswordCorrect)
     if (!isPasswordCorrect) {
         throw new ApiError(401, "Invalid credentials")
     }
