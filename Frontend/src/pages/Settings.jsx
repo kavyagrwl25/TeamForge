@@ -158,7 +158,12 @@ function Settings({ onAccountDeleted, onProfileUpdated }) {
       onProfileUpdated?.(user);
       setProfileSuccess("Profile updated successfully.");
     } catch (err) {
-      setProfileError(getApiErrorMessage(err, "Profile update failed."));
+      setProfileError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to update profile"
+      );
     } finally {
       setProfileLoading(false);
     }
