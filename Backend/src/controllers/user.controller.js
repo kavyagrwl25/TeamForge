@@ -4,7 +4,17 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"       
 import { Project } from "../models/project.model.js"
 import { Request } from "../models/request.model.js"         
-import { isValidFullName, isValidEmail, isValidPassword, isValidUserName, isValidBio, isValidSkills, isValidSocialLinks } from "../utils/validators.js"
+import {
+    getBioValidationError,
+    getSocialLinksValidationError,
+    isValidBio,
+    isValidEmail,
+    isValidFullName,
+    isValidPassword,
+    isValidSkills,
+    isValidSocialLinks,
+    isValidUserName,
+} from "../utils/validators.js"
 import jwt from "jsonwebtoken"
 
 const isProduction = process.env.NODE_ENV === "production"
@@ -219,7 +229,7 @@ const updateProfile = AsyncHandler (async (req, res) => {
     }
 
     if (bio !== undefined && !isValidBio(bio)) {
-        throw new ApiError(400, "Invalid bio");
+        throw new ApiError(400, getBioValidationError(bio));
     }
 
     if (skills !== undefined && !isValidSkills(skills)) {
@@ -227,7 +237,7 @@ const updateProfile = AsyncHandler (async (req, res) => {
     }
 
     if (socialLinks !== undefined && !isValidSocialLinks(socialLinks)) {
-        throw new ApiError(400, "Invalid social links");
+        throw new ApiError(400, getSocialLinksValidationError(socialLinks));
     }
     const updateFields = {};
         if (fullName !== undefined) updateFields.fullName = fullName;

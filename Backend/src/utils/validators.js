@@ -1,3 +1,19 @@
+export const BIO_MAX_LENGTH = 200;
+
+const githubProfileRegex = /^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/;
+const linkedinProfileRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+
+export const getBioValidationError = (bio) => {
+  if (bio === undefined || bio === null) return "";
+  if (typeof bio !== "string") return "Bio must be text.";
+  if (bio.trim().length === 0) return "Bio cannot be empty.";
+  if (bio.length > BIO_MAX_LENGTH) {
+    return `Bio must be ${BIO_MAX_LENGTH} characters or fewer.`;
+  }
+
+  return "";
+};
+
 export const isValidFullName = (fullName) => {
     if (typeof fullName !== "string") return false;
     const trimmed = fullName.trim();
@@ -35,13 +51,7 @@ export const isValidPassword = (password) => {
 };
 
 export const isValidBio = (bio) => {
-  if (bio === undefined || bio === null) return true;
-  if (typeof bio !== "string") return false;
-  // Check if it's only spaces
-  if (bio.trim().length === 0) return false;
-  // Count length INCLUDING spaces
-  if (bio.length > 200) return false;
-  return true;
+  return !getBioValidationError(bio);
 };
 
 export const isValidSkills = (skills) => {
@@ -57,25 +67,39 @@ export const isValidSkills = (skills) => {
   return true;
 };
 
-export const isValidSocialLinks = (socialLinks) => {
-  if (socialLinks === undefined || socialLinks === null) return true;
-  if (typeof socialLinks !== "object" || Array.isArray(socialLinks)) return false;
+export const getSocialLinksValidationError = (socialLinks) => {
+  if (socialLinks === undefined || socialLinks === null) return "";
+  if (typeof socialLinks !== "object" || Array.isArray(socialLinks)) {
+    return "Social links must be a valid object.";
+  }
+
   const { github, linkedin } = socialLinks;
-  // GitHub validation
+
   if (github !== undefined && github !== null) {
-    if (typeof github !== "string") return false;
+    if (typeof github !== "string") return "Invalid GitHub profile link";
+
     const trimmedGithub = github.trim();
-    if (trimmedGithub.length === 0) return false;
-    const githubRegex = /^(https?:\/\/)?(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/;
-    if (!githubRegex.test(trimmedGithub)) return false;
+
+    if (trimmedGithub.length === 0) return "Invalid GitHub profile link";
+    if (!githubProfileRegex.test(trimmedGithub)) {
+      return "Invalid GitHub profile link";
+    }
   }
-  // LinkedIn validation
+
   if (linkedin !== undefined && linkedin !== null) {
-    if (typeof linkedin !== "string") return false;
+    if (typeof linkedin !== "string") return "Invalid LinkedIn profile link";
+
     const trimmedLinkedin = linkedin.trim();
-    if (trimmedLinkedin.length === 0) return false;
-    const linkedinRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
-    if (!linkedinRegex.test(trimmedLinkedin)) return false;
+
+    if (trimmedLinkedin.length === 0) return "Invalid LinkedIn profile link";
+    if (!linkedinProfileRegex.test(trimmedLinkedin)) {
+      return "Invalid LinkedIn profile link";
+    }
   }
-  return true;
+
+  return "";
+};
+
+export const isValidSocialLinks = (socialLinks) => {
+  return !getSocialLinksValidationError(socialLinks);
 };
